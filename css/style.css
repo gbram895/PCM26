@@ -246,3 +246,7 @@ ul.plain { list-style: none; margin: 0; padding: 0; }
 .obj { display: flex; justify-content: space-between; gap: 10px; padding-block: 6px; border-bottom: 1px solid var(--line); }
 .obj:last-child { border-bottom: 0; }
 details > summary { cursor: pointer; color: var(--ink-2); }
+.savebtn { font-size: 13px; }
+.savebtn.save-saved { color: var(--good); }
+.savebtn.save-saving { color: var(--ink-3); }
+.savebtn.save-error { color: var(--bad); border-color: var(--bad); }

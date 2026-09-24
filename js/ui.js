@@ -93,6 +93,23 @@ PCM.UI = (function () {
         <div class="row"><button class="btn" data-act="import">Load pasted code</button></div></div></details>
       ${S.ioMsg ? `<div class="msg small">${h(S.ioMsg)}</div>` : ''}`;
   }
+  function saveBadge() {
+    const st = PCM.Saves.status().state;
+    const where = PCM.Saves.isCloud() ? 'your Claude account' : 'this browser';
+    const label = st === 'saving' ? 'Saving…' : st === 'error' ? '⚠ Not saved' : '✓ Saved';
+    const tip = st === 'error' ? 'Saving failed. Click to try again.' : `Your career saves automatically to ${where}.`;
+    return `<button class="btn savebtn save-${st}" data-act="savenow" title="${tip}">${label}</button>`;
+  }
+  function updateSaveBadge() {
+    const el = document.querySelector('.savebtn');
+    if (el && G) el.outerHTML = saveBadge();
+  }
+  async function saveNow() {
+    PCM.Saves.autosave(G, true);
+    await PCM.Saves.flushAuto();
+    const st = PCM.Saves.status().state;
+    toast(st === 'error' ? 'Could not save right now. The game keeps trying.' : `Saved to ${PCM.Saves.isCloud() ? 'your Claude account' : 'this browser'}`);
+  }
   async function quickSave() {
     const slot = G.lastSlot || '1';
     try {
@@ -177,7 +194,7 @@ PCM.UI = (function () {
       <div class="spacer"></div>
       <div class="clock"><div class="wk">${G.week > W ? 'Off-season' : 'Week ' + G.week} · ${G.year}</div><div class="sub small muted">${h(sub)}</div></div>
       <div class="cash num ${t.cash < 0 ? 'neg' : ''}" title="Bank balance">${U.money(t.cash)}</div>
-      <button class="btn savebtn" data-act="quicksave" title="Save to ${h(PCM.Saves.slotLabel(G.lastSlot || '1'))} (Ctrl+S)">Save</button>
+      ${saveBadge()}
       <button class="btn go" data-act="continue">${continueLabel()}</button>
     </header>`;
   }
@@ -192,6 +209,7 @@ PCM.UI = (function () {
   function render() {
     if (!root) return;
     if (S.live && S.view !== 'race') { PCM.Live.stop(); S.live = null; }
+    if (!G && S.booting) { root.innerHTML = `<div class="intro"><div class="label">PCM26</div><h2>Loading your career…</h2><p class="muted small">Picking up where you left off.</p></div>`; return; }
     if (!G) { root.innerHTML = newGameView() + toastHtml(); return; }
     const scrollY = window.scrollY;
     const liveRunning = S.live && document.getElementById('live');
@@ -239,7 +257,7 @@ PCM.UI = (function () {
         <h1>PCM<b style="background:var(--leader);color:var(--leader-ink);padding:0 8px;border-radius:4px;margin-left:4px">26</b> · Directeur Sportif</h1>
         <p class="lede">Take charge of a professional road team. Pick riders for 25 races from the spring Classics to three Grand Tours, set tactics stage by stage, train your squad, balance the books and sign the next generation of champions.</p>
       </div>
-      ${S.slots && S.slots.some(x => !x.empty) ? `<div class="panel"><header><h2>Continue your career</h2><span class="small muted">Saves in ${PCM.Saves.where() === 'Claude account' ? 'your Claude account and this browser' : 'this browser'}</span></header>${slotsHtml(false)}</div>` : ''}
+      ${S.slots && S.slots.some(x => !x.empty) ? `<div class="panel"><header><h2>Your saved careers</h2><span class="small muted">Pick one to carry on</span></header>${slotsHtml(false)}</div>` : ''}
       <div class="panel">
         <header><h2>Choose your team</h2><span class="muted small">Stars show the team's standing. Bigger teams have deeper squads and tougher board objectives.</span></header>
         ${worldPick}
@@ -680,11 +698,12 @@ PCM.UI = (function () {
   function optionsView() {
     return `<div class="pagehead"><div><div class="label">Game</div><h1>Save & settings</h1></div></div>
       <div class="grid g2">
-        <div class="panel" style="grid-column:1 / -1"><header><h3>Save slots</h3><span class="small muted">${PCM.Saves.isCloud() ? 'Stored in your Claude account, so they follow you to any device.' : 'Stored in this browser.'} The game autosaves after every action; <b>Save</b> in the top bar (or Ctrl+S) writes to ${h(PCM.Saves.slotLabel(G.lastSlot || '1'))}.</span></header>
-          ${slotsHtml(true)}
-          ${fileTools(true)}
+        <div class="panel" style="grid-column:1 / -1"><h3>Saving is automatic</h3>
+          <p>Every change you make is saved ${PCM.Saves.isCloud() ? 'to your Claude account. Open this page on any device and you carry on where you left off.' : 'in this browser. Open the game again and you carry on where you left off.'} You don't need to do anything.</p>
+          <details><summary>More save options: extra slots, save files, save codes</summary>
+            <div class="stack" style="margin-top:10px">${slotsHtml(true)}${fileTools(true)}</div></details>
         </div>
-        <div class="panel"><h3>New career</h3><p class="small">Start over with a new team. Your autosave will be replaced; saved slots are kept.</p><div class="row"><button class="btn danger" data-act="newgame-ask">Start new career</button></div></div>
+        <div class="panel"><h3>New career</h3><p class="small">Start over with a new team. Your current career is kept in a save slot, so you can come back to it.</p><div class="row"><button class="btn danger" data-act="newgame-ask">Start new career</button></div></div>
         <div class="panel"><h3>How to play</h3>
           <ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
             <li><b>Continue</b> moves the calendar one week. Riders who aren't racing train according to their load and focus.</li>
@@ -708,7 +727,7 @@ PCM.UI = (function () {
     else if (m.type === 'confirmEnd') inner = confirmEndModal();
     else if (m.type === 'summary') inner = summaryModal(G.pendingSummary);
     else if (m.type === 'jobs') inner = jobsModal();
-    else if (m.type === 'newgame') inner = `<header><h2>Start a new career?</h2><button class="x" data-act="closemodal" aria-label="Close">×</button></header><p>This replaces your current save. Export a save code first if you want to keep it.</p><div class="row"><button class="btn" data-act="closemodal">Cancel</button><button class="btn danger" data-act="newgame">Yes, start over</button></div>`;
+    else if (m.type === 'newgame') inner = `<header><h2>Start a new career?</h2><button class="x" data-act="closemodal" aria-label="Close">×</button></header><p>Your current career will be kept in a save slot. You can switch back to it from the start screen.</p><div class="row"><button class="btn" data-act="closemodal">Cancel</button><button class="btn danger" data-act="newgame">Yes, start over</button></div>`;
     if (!inner) return '';
     return `<div class="modal-bg" data-act="bgclose"><div class="modal ${cls}" role="dialog" aria-modal="true">${inner}</div></div>`;
   }
@@ -846,6 +865,7 @@ PCM.UI = (function () {
       case 'startgame': startNewGame(); break;
       case 'world': S.world = el.dataset.w; S.newTeam = null; S.mgr = document.getElementById('mgr')?.value || ''; S.cname = document.getElementById('cname')?.value || ''; render(); break;
       case 'quicksave': quickSave(); break;
+      case 'savenow': saveNow(); break;
       case 'saveslot': PCM.Saves.save(G, el.dataset.slot).then(m => { toast(`Saved to ${PCM.Saves.slotLabel(m.slot)}`); render(); }, err => toast(err.message || 'Save failed')); break;
       case 'loadslot': { const sl = el.dataset.slot; loadGame(() => PCM.Saves.load(sl), 'Loaded ' + PCM.Saves.slotLabel(sl)); break; }
       case 'delslot-ask': S.confirmDel = el.dataset.slot; render(); break;
@@ -917,7 +937,12 @@ PCM.UI = (function () {
       }
       case 'import': { const v = document.getElementById('io')?.value || ''; if (v.trim()) loadFromString(v); break; }
       case 'newgame-ask': S.modal = { type: 'newgame' }; render(); break;
-      case 'newgame': PCM.Saves.flushAuto(); G = null; S.modal = null; S.newTeam = null; S.io = ''; S.ioMsg = ''; refreshSlots(); render(); break;
+      case 'newgame': {
+        const old = G;
+        PCM.Saves.stash(old).then(m => toast(`Your ${old.year} career is kept in ${PCM.Saves.slotLabel(m.slot)}`), () => toast('Could not keep the old career in a slot'))
+          .finally(refreshSlots);
+        G = null; S.modal = null; S.newTeam = null; S.io = ''; S.ioMsg = ''; render(); break;
+      }
     }
   }
   function closeModal() {
@@ -962,12 +987,18 @@ PCM.UI = (function () {
     document.addEventListener('change', handleChange);
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeModal();
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && G) { e.preventDefault(); quickSave(); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && G) { e.preventDefault(); saveNow(); }
       if (e.key === 'Enter' && e.target.matches('a.rname, [data-act].teamcard')) e.target.click();
     });
     PCM.Saves.onChange(refreshSlots);
+    PCM.Saves.onStatus(updateSaveBadge);
     PCM.Saves.init();
-    refreshSlots();
+    S.booting = true;
+    PCM.Saves.latest()
+      .then(l => (l ? PCM.Saves.load(l.slot, l.where) : null))
+      .then(g => { if (g && !G) { G = g; S.view = 'dashboard'; } })
+      .catch(() => { /* fall back to the start screen */ })
+      .finally(() => { S.booting = false; refreshSlots(); render(); });
     // make sure the latest progress reaches the cloud when the page is closed or hidden
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') PCM.Saves.flushAuto(); });
     window.addEventListener('pagehide', () => PCM.Saves.flushAuto());

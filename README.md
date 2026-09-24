@@ -12,25 +12,11 @@ npm start   # http://localhost:8080
 
 ### Saving
 
-- The game **autosaves** after every action.
-- **Save** in the top bar (or Ctrl/Cmd+S) writes to your current slot. There are three manual slots plus the autosave, managed under **Game**.
-- On the published claude.ai page, slots are stored in your Claude account, so they follow you to any device. Run from local files, they're stored in that browser.
-- **Save to file** / **Load from file** and **Copy save code** move a career anywhere. Saves are gzip-compressed (about 140 KB).
+You don't need to do anything: the game saves after every action and reopens straight into your career.
 
-## Real peloton (optional)
-
-The game ships with a fictional world. To play with the real 2026 WorldTeam riders, build the roster yourself from Wikipedia (needs internet access to `en.wikipedia.org`):
-
-```sh
-npm run build:real
-```
-
-This writes `js/data-real.js`, which git ignores so real rider data never lands in this public repo. A **Real peloton** option then appears on the new-game screen, with real race names.
-
-- Rosters, nationalities and birthdates come from Wikipedia's team season pages and rider articles.
-- Ratings are estimates. About 150 well-known riders are hand-rated in `tools/real/ratings.csv`; everyone else is estimated from age and the major wins listed on their Wikipedia page. Edit the CSV and re-run to change them.
-- Responses are cached in `tools/real/cache/`. Use `--refresh` to re-download, or `--season 2027` for another year.
-- To choose teams yourself, list their Wikipedia article titles in `tools/real/teams.txt`, one per line.
+- On the published claude.ai page, saves live in your Claude account, so you can carry on from any device. Run from local files, they live in that browser.
+- The top bar shows **✓ Saved** or **Saving…**. Click it (or press Ctrl/Cmd+S) to save immediately.
+- Starting a new career keeps the old one in a save slot. Extra slots, save files and save codes are under **Game → More save options**.
 
 ## What you do
 

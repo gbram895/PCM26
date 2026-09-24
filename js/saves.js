@@ -8,7 +8,7 @@ PCM.Saves = (function () {
   const LOCAL_PREFIX = 'pcm26-slot-';
   const CODE_PREFIX = 'PCM26:gz:';
   const CHUNK = 180000; // characters per cloud document (limit is 256 KiB)
-  const CLOUD_AUTOSAVE_MS = 20000;
+  const CLOUD_AUTOSAVE_MS = 4000;
 
   let cloud = null;      // { db, uid }
   let downloads = null;
@@ -17,6 +17,11 @@ PCM.Saves = (function () {
   let queue = Promise.resolve();
   let pendingAuto = null, autoTimer = null;
   const listeners = [];
+  const statusListeners = [];
+  // what the top bar shows: 'saved' | 'saving' | 'error'
+  const status = { state: 'saved', at: null };
+  function setStatus(state) { status.state = state; if (state === 'saved') status.at = Date.now(); for (const fn of statusListeners) try { fn(status); } catch (e) { /* ignore */ } }
+  function onStatus(fn) { statusListeners.push(fn); }
 
   function slotLabel(slot) { return slot === 'auto' ? 'Autosave' : 'Slot ' + slot; }
   function where() { return cloud ? 'Claude account' : 'This browser'; }
@@ -164,7 +169,7 @@ PCM.Saves = (function () {
     } else if (!localSet(LOCAL_PREFIX + slot, code) || !localSet(LOCAL_PREFIX + slot + '-meta', JSON.stringify(m))) {
       throw new Error('This browser has no room left for saves. Delete a slot or save to a file.');
     }
-    notify();
+    if (slot !== 'auto') notify();
     return { ...m, where: cloud ? 'cloud' : 'local' };
   }
 
@@ -172,6 +177,7 @@ PCM.Saves = (function () {
     await whenReady();
     let code = null;
     if (from !== 'local' && cloud) code = await cloudRead(slot);
+    if (from === 'local' && slot === 'auto') { const g = Game.load(); if (g) return g; }
     if (!code) code = localGet(LOCAL_PREFIX + slot);
     if (!code && slot === 'auto') { const g = Game.load(); if (g) return g; }
     if (!code) throw new Error(slotLabel(slot) + ' is empty.');
@@ -189,19 +195,39 @@ PCM.Saves = (function () {
 
   // Called after every action: instant local autosave, cloud autosave coalesced to one write per pause
   function autosave(G, urgent) {
-    Game.save(G);
+    const okLocal = Game.save(G);
     localSet(LOCAL_PREFIX + 'auto-meta', JSON.stringify({ ...meta(G, 'auto', 0), local: 'legacy' }));
-    if (!cloud) return;
+    if (!cloud) { setStatus(okLocal ? 'saved' : 'error'); return; }
     pendingAuto = G;
+    setStatus('saving');
     clearTimeout(autoTimer);
-    autoTimer = setTimeout(flushAuto, urgent ? 1500 : CLOUD_AUTOSAVE_MS);
+    autoTimer = setTimeout(flushAuto, urgent ? 1000 : CLOUD_AUTOSAVE_MS);
   }
   async function flushAuto() {
     clearTimeout(autoTimer);
     const G = pendingAuto;
     pendingAuto = null;
     if (!G || !cloud) return;
-    try { await save(G, 'auto'); } catch (e) { /* next autosave retries */ }
+    try {
+      await save(G, 'auto');
+      if (!pendingAuto) setStatus('saved');
+    } catch (e) {
+      setStatus('error');
+      pendingAuto = pendingAuto || G;
+      autoTimer = setTimeout(flushAuto, 15000); // keep retrying quietly
+    }
+  }
+  // newest save of any kind, for resuming straight into the game
+  async function latest() {
+    const all = (await list()).filter(x => !x.empty);
+    all.sort((a, b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')));
+    return all[0] || null;
+  }
+  // put a career into the first empty manual slot (or the oldest one) so starting over never loses it
+  async function stash(G) {
+    const slots = (await list()).filter(x => x.slot !== 'auto');
+    const target = slots.find(x => x.empty) || slots.slice().sort((a, b) => String(a.savedAt || '').localeCompare(String(b.savedAt || '')))[0];
+    return save(G, target.slot);
   }
 
   async function saveFile(G) {
@@ -220,5 +246,5 @@ PCM.Saves = (function () {
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
 
-  return { init, list, save, load, remove, autosave, flushAuto, saveFile, encode, decode, onChange, slotLabel, where, isCloud: () => !!cloud, SLOTS };
+  return { init, list, latest, stash, status: () => status, onStatus, save, load, remove, autosave, flushAuto, saveFile, encode, decode, onChange, slotLabel, where, isCloud: () => !!cloud, SLOTS };
 })();
