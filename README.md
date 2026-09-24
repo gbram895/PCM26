@@ -18,6 +18,21 @@ You don't need to do anything: the game saves after every action and reopens str
 - The top bar shows **✓ Saved** or **Saving…**. Click it (or press Ctrl/Cmd+S) to save immediately.
 - Starting a new career keeps the old one in a save slot. Extra slots, save files and save codes are under **Game → More save options**.
 
+## Real peloton
+
+The game also has a real world: the 18 WorldTeams of 2026 with real race names. Build its roster with:
+
+```sh
+npm run build:real        # from tools/real/rosters-2026.txt (hand-written, no internet needed)
+npm run build:real:wiki   # or download full rosters from Wikipedia (needs access to en.wikipedia.org)
+```
+
+This writes `js/data-real.js` (ignored by git). The **Real peloton** option then appears on the new-game screen and becomes the default.
+
+- `tools/real/rosters-2026.txt` lists about 300 riders written from memory. Lesser-known riders and late transfers may be out of date: edit the file and rebuild. Squads with fewer than 24 riders are topped up with fictional neo-pros.
+- Ratings are estimates. About 200 riders are hand-rated in `tools/real/ratings.csv`; the rest are estimated. Edit the CSV and rebuild to change them.
+- Race routes and climb names are generated, not the real courses.
+
 ## What you do
 
 - **Choose one of 18 fictional teams**, from a superteam to an underdog wildcard. Each team has its own budget, squad depth and board expectations.
