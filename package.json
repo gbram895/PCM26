@@ -1,0 +1,11 @@
+{
+  "name": "pcm26",
+  "version": "1.0.0",
+  "description": "PCM26 – a pro cycling team management sim that runs in the browser",
+  "private": true,
+  "scripts": {
+    "test": "node test/sim.test.js",
+    "start": "npx --yes http-server -c-1 -p 8080 ."
+  },
+  "license": "MIT"
+}
