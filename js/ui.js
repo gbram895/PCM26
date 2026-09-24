@@ -269,10 +269,8 @@ PCM.UI = (function () {
           <button class="btn go" data-act="startgame" ${S.newTeam ? '' : 'disabled'}>Start career ▸</button>
         </div>
       </div>
-      <div class="panel">
-        <h3>Load a save file or code</h3>
-        ${fileTools(false)}
-      </div>
+      <details class="small"><summary>Moving a career from another browser? Load a save file or code</summary>
+        <div class="panel" style="margin-top:8px">${fileTools(false)}</div></details>
     </div>`;
   }
 
