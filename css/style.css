@@ -103,6 +103,7 @@ button, select, input { font: inherit; color: inherit; }
   .brand { font-size: 18px; }
   .clock .wk, .cash { font-size: 15px; white-space: nowrap; }
   .btn.go { font-size: 15px; padding: 6px 10px; }
+  .btn.savebtn { padding: 6px 9px; }
   .intro h1 { font-size: 38px; }
 }
 
@@ -244,3 +245,4 @@ td.at { text-align: center; font-weight: 600; min-width: 32px; }
 ul.plain { list-style: none; margin: 0; padding: 0; }
 .obj { display: flex; justify-content: space-between; gap: 10px; padding-block: 6px; border-bottom: 1px solid var(--line); }
 .obj:last-child { border-bottom: 0; }
+details > summary { cursor: pointer; color: var(--ink-2); }

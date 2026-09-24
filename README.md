@@ -10,7 +10,12 @@ Open `index.html` in a browser, or serve the folder:
 npm start   # http://localhost:8080
 ```
 
-Progress is saved automatically in the browser's localStorage. Use **Game → Show save code** to move a career between devices.
+### Saving
+
+- The game **autosaves** after every action.
+- **Save** in the top bar (or Ctrl/Cmd+S) writes to your current slot. There are three manual slots plus the autosave, managed under **Game**.
+- On the published claude.ai page, slots are stored in your Claude account, so they follow you to any device. Run from local files, they're stored in that browser.
+- **Save to file** / **Load from file** and **Copy save code** move a career anywhere. Saves are gzip-compressed (about 140 KB).
 
 ## Real peloton (optional)
 
@@ -50,6 +55,7 @@ This writes `js/data-real.js`, which git ignores so real rider data never lands 
 | `js/game.js` | World generation, weekly loop, finances, transfers, board, season rollover, save/load |
 | `js/ui.js` | All screens and event handling |
 | `js/live.js` | Live stage playback |
+| `js/saves.js` | Save slots (Claude account or browser), save files and codes |
 | `test/sim.test.js` | Headless test that plays three full seasons |
 | `tools/build-real-db.js` | Builds the optional real-peloton roster from Wikipedia |
 | `test/real.test.js` | Tests the roster parsers and a season on a real-style database |

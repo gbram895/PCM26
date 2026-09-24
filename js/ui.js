@@ -13,7 +13,7 @@ PCM.UI = (function () {
     view: 'dashboard', squadSort: { k: 'ovr', d: -1 }, mktSort: { k: 'ovr', d: -1 },
     mkt: { q: '', spec: '', maxAge: '', minOvr: '', maxSal: '', fa: false },
     raceTab: 'stage', stageView: null, sel: null, tactic: 'bal', live: null, modal: null, standTab: 'teams',
-    newTeam: null, world: 'fictional', hasSave: false, toast: '', io: '', ioMsg: '',
+    newTeam: null, world: 'fictional', slots: null, saveStatus: '', confirmDel: null, toast: '', io: '', ioMsg: '',
   };
 
   // ---------- small helpers ----------
@@ -58,7 +58,62 @@ PCM.UI = (function () {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { S.toast = ''; const t = document.querySelector('.toast'); if (t) t.remove(); }, 3200);
   }
-  function commit() { if (G) Game.save(G); render(); }
+  function commit(urgent) { if (G) PCM.Saves.autosave(G, urgent); render(); }
+
+  // ---------- saving ----------
+  function ago(iso) {
+    if (!iso) return 'earlier';
+    const s = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.round(s / 60) + ' min ago';
+    if (s < 86400) return Math.round(s / 3600) + ' h ago';
+    if (s < 172800) return 'yesterday';
+    return new Date(iso).toLocaleDateString();
+  }
+  function refreshSlots() { PCM.Saves.list().then(l => { S.slots = l; render(); }).catch(() => {}); }
+  function slotsHtml(inGame) {
+    if (!S.slots) return '<div class="empty">Loading saves…</div>';
+    return `<div class="tablewrap"><table><tbody>${S.slots.map(sl => {
+      const label = PCM.Saves.slotLabel(sl.slot);
+      const info = sl.empty ? '<span class="muted">Empty</span>' : `<b>${h(sl.team)}</b> <span class="small muted">· ${sl.week > 41 ? 'end of' : 'week ' + sl.week} ${sl.year}${sl.world === 'real' ? ' · real peloton' : ''}</span><div class="small muted">${sl.where === 'cloud' ? 'Claude account' : 'This browser'} · ${ago(sl.savedAt)}</div>`;
+      const confirm = S.confirmDel === sl.slot;
+      const btns = [
+        inGame && sl.slot !== 'auto' ? `<button class="btn sm ${sl.empty ? 'primary' : ''}" data-act="saveslot" data-slot="${sl.slot}">${sl.empty ? 'Save here' : 'Overwrite'}</button>` : '',
+        !sl.empty ? `<button class="btn sm ${inGame ? '' : 'primary'}" data-act="loadslot" data-slot="${sl.slot}">Load</button>` : '',
+        !sl.empty ? (confirm ? `<button class="btn sm danger" data-act="delslot" data-slot="${sl.slot}">Confirm delete</button>` : `<button class="btn sm danger" data-act="delslot-ask" data-slot="${sl.slot}">Delete</button>`) : '',
+      ].join('');
+      return `<tr><td style="width:90px"><span class="label">${label}</span></td><td style="white-space:normal">${info}</td><td class="r"><div class="row" style="justify-content:flex-end">${btns}</div></td></tr>`;
+    }).join('')}</tbody></table></div>`;
+  }
+  function fileTools(inGame) {
+    return `<div class="row">${inGame ? '<button class="btn" data-act="savefile">Save to file</button>' : ''}<label class="btn">Load from file…<input type="file" id="iofile" accept=".json,.txt" hidden></label>
+        ${inGame ? '<button class="btn" data-act="copysave">Copy save code</button>' : ''}</div>
+      <details ${S.io ? 'open' : ''}><summary class="small">Paste a save code</summary>
+        <div class="stack" style="margin-top:8px"><textarea id="io" rows="3" placeholder="Paste a save code here">${h(S.io)}</textarea>
+        <div class="row"><button class="btn" data-act="import">Load pasted code</button></div></div></details>
+      ${S.ioMsg ? `<div class="msg small">${h(S.ioMsg)}</div>` : ''}`;
+  }
+  async function quickSave() {
+    const slot = G.lastSlot || '1';
+    try {
+      const m = await PCM.Saves.save(G, slot);
+      S.saveStatus = 'Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      toast(`Saved to ${PCM.Saves.slotLabel(slot)} (${m.where === 'cloud' ? 'your Claude account' : 'this browser'})`);
+    } catch (e) { toast(e.message || 'Save failed'); }
+    render();
+  }
+  async function loadGame(fn, okMsg) {
+    try {
+      const g = await fn();
+      G = g;
+      Object.assign(S, { view: 'dashboard', sel: null, live: null, modal: null, io: '', ioMsg: '', confirmDel: null });
+      commit();
+      toast(okMsg || 'Career loaded');
+    } catch (e) {
+      S.ioMsg = e && e.message && !/JSON|Unexpected|atob|decod|invalid/i.test(e.message) ? e.message : 'That save could not be read. Check it was copied completely.';
+      render();
+    }
+  }
 
   // ---------- course profile ----------
   function profileGeom(stage, o = {}) {
@@ -122,6 +177,7 @@ PCM.UI = (function () {
       <div class="spacer"></div>
       <div class="clock"><div class="wk">${G.week > W ? 'Off-season' : 'Week ' + G.week} · ${G.year}</div><div class="sub small muted">${h(sub)}</div></div>
       <div class="cash num ${t.cash < 0 ? 'neg' : ''}" title="Bank balance">${U.money(t.cash)}</div>
+      <button class="btn savebtn" data-act="quicksave" title="Save to ${h(PCM.Saves.slotLabel(G.lastSlot || '1'))} (Ctrl+S)">Save</button>
       <button class="btn go" data-act="continue">${continueLabel()}</button>
     </header>`;
   }
@@ -183,7 +239,7 @@ PCM.UI = (function () {
         <h1>PCM<b style="background:var(--leader);color:var(--leader-ink);padding:0 8px;border-radius:4px;margin-left:4px">26</b> · Directeur Sportif</h1>
         <p class="lede">Take charge of a professional road team. Pick riders for 25 races from the spring Classics to three Grand Tours, set tactics stage by stage, train your squad, balance the books and sign the next generation of champions.</p>
       </div>
-      ${S.hasSave ? `<div class="panel"><div class="row between"><div><h3>Continue your career</h3><p class="muted small">A saved game was found in this browser.</p></div><button class="btn primary" data-act="loadsave">Continue career</button></div></div>` : ''}
+      ${S.slots && S.slots.some(x => !x.empty) ? `<div class="panel"><header><h2>Continue your career</h2><span class="small muted">Saves in ${PCM.Saves.where() === 'Claude account' ? 'your Claude account and this browser' : 'this browser'}</span></header>${slotsHtml(false)}</div>` : ''}
       <div class="panel">
         <header><h2>Choose your team</h2><span class="muted small">Stars show the team's standing. Bigger teams have deeper squads and tougher board objectives.</span></header>
         ${worldPick}
@@ -196,10 +252,8 @@ PCM.UI = (function () {
         </div>
       </div>
       <div class="panel">
-        <h3>Import a saved career</h3>
-        <p class="small muted">Paste a save code you exported earlier.</p>
-        <textarea id="io" rows="3" placeholder="Paste save code here">${h(S.io)}</textarea>
-        <div class="row"><button class="btn" data-act="import">Load save code</button><label class="btn">Load save file…<input type="file" id="iofile" accept=".json,.txt" hidden></label>${S.ioMsg ? `<span class="small">${h(S.ioMsg)}</span>` : ''}</div>
+        <h3>Load a save file or code</h3>
+        ${fileTools(false)}
       </div>
     </div>`;
   }
@@ -626,13 +680,11 @@ PCM.UI = (function () {
   function optionsView() {
     return `<div class="pagehead"><div><div class="label">Game</div><h1>Save & settings</h1></div></div>
       <div class="grid g2">
-        <div class="panel"><h3>Saving</h3><p class="small">The game saves automatically in this browser after every action. To move your career to another device, export a save code and import it there.</p>
-          <div class="row"><button class="btn" data-act="export">Show save code</button><button class="btn" data-act="copysave">Copy save code</button></div>
-          <textarea id="io" rows="4" placeholder="Save code appears here. Paste one to import.">${h(S.io)}</textarea>
-          <div class="row"><button class="btn" data-act="import">Load pasted code</button><label class="btn">Load save file…<input type="file" id="iofile" accept=".json,.txt" hidden></label></div>
-          ${S.ioMsg ? `<div class="msg small">${h(S.ioMsg)}</div>` : ''}
+        <div class="panel" style="grid-column:1 / -1"><header><h3>Save slots</h3><span class="small muted">${PCM.Saves.isCloud() ? 'Stored in your Claude account, so they follow you to any device.' : 'Stored in this browser.'} The game autosaves after every action; <b>Save</b> in the top bar (or Ctrl+S) writes to ${h(PCM.Saves.slotLabel(G.lastSlot || '1'))}.</span></header>
+          ${slotsHtml(true)}
+          ${fileTools(true)}
         </div>
-        <div class="panel"><h3>New career</h3><p class="small">Start over with a new team. Your current save will be replaced.</p><div class="row"><button class="btn danger" data-act="newgame-ask">Start new career</button></div></div>
+        <div class="panel"><h3>New career</h3><p class="small">Start over with a new team. Your autosave will be replaced; saved slots are kept.</p><div class="row"><button class="btn danger" data-act="newgame-ask">Start new career</button></div></div>
         <div class="panel"><h3>How to play</h3>
           <ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
             <li><b>Continue</b> moves the calendar one week. Riders who aren't racing train according to their load and focus.</li>
@@ -745,17 +797,7 @@ PCM.UI = (function () {
     Object.assign(S, { view: 'dashboard', sel: null, live: null, modal: null, io: '', ioMsg: '' });
     commit();
   }
-  function loadFromString(str) {
-    try {
-      G = Game.deserialize(str.trim());
-      Object.assign(S, { view: 'dashboard', sel: null, live: null, modal: null, io: '', ioMsg: '' });
-      commit();
-      toast('Career loaded');
-    } catch (e) {
-      S.ioMsg = 'That save code could not be read. Check it was copied completely.';
-      render();
-    }
-  }
+  function loadFromString(str) { return loadGame(() => PCM.Saves.decode(str)); }
 
   function onContinue() {
     if (G.fired) { S.modal = { type: 'jobs' }; render(); return; }
@@ -766,7 +808,7 @@ PCM.UI = (function () {
     S.stageView = null;
     if (res.status === 'race') { S.view = 'race'; S.raceTab = 'stage'; S.tactic = 'bal'; toast('Race week: ' + res.race.name); }
     else if (res.status === 'season-end') toast('All races done. Press End season when ready.');
-    commit();
+    commit(true);
   }
   function skipToRace() {
     let guard = 0;
@@ -788,8 +830,7 @@ PCM.UI = (function () {
     S.stageView = null;
     if (race.kind === 'stage' || race.status === 'done') S.raceTab = S.raceTab || 'stage';
     if (watch) S.live = { raceId: race.id, sr, done: false };
-    Game.save(G);
-    render();
+    commit(race.status === 'done');
   }
 
   function handleClick(e) {
@@ -804,7 +845,12 @@ PCM.UI = (function () {
       case 'pickteam': S.newTeam = id; S.mgr = document.getElementById('mgr')?.value || ''; S.cname = document.getElementById('cname')?.value || ''; render(); break;
       case 'startgame': startNewGame(); break;
       case 'world': S.world = el.dataset.w; S.newTeam = null; S.mgr = document.getElementById('mgr')?.value || ''; S.cname = document.getElementById('cname')?.value || ''; render(); break;
-      case 'loadsave': G = Game.load(); if (G) { S.view = 'dashboard'; render(); } break;
+      case 'quicksave': quickSave(); break;
+      case 'saveslot': PCM.Saves.save(G, el.dataset.slot).then(m => { toast(`Saved to ${PCM.Saves.slotLabel(m.slot)}`); render(); }, err => toast(err.message || 'Save failed')); break;
+      case 'loadslot': { const sl = el.dataset.slot; loadGame(() => PCM.Saves.load(sl), 'Loaded ' + PCM.Saves.slotLabel(sl)); break; }
+      case 'delslot-ask': S.confirmDel = el.dataset.slot; render(); break;
+      case 'delslot': S.confirmDel = null; PCM.Saves.remove(el.dataset.slot).then(() => toast('Save deleted'), err => toast(err.message || 'Delete failed')); break;
+      case 'savefile': PCM.Saves.saveFile(G).then(() => toast('Save file created'), err => { if (!err || err.code !== 'declined') toast('Could not create the file. Use Copy save code instead.'); }); break;
       case 'nav': if (S.live) { PCM.Live.stop(); S.live = null; } S.view = el.dataset.view; S.modal = null; S.stageView = null; render(); window.scrollTo(0, 0); break;
       case 'continue': onContinue(); break;
       case 'tonextrace': skipToRace(); break;
@@ -856,20 +902,22 @@ PCM.UI = (function () {
         if (res.ok) { S.modal = null; toast(res.msg); } else { S.modal.msg = res.msg; S.modal.ok = false; }
         commit(); break;
       }
-      case 'endseason': Game.endSeason(G); S.modal = { type: 'summary' }; S.sel = null; commit(); break;
+      case 'endseason': Game.endSeason(G); S.modal = { type: 'summary' }; S.sel = null; commit(true); break;
       case 'closesummary': G.pendingSummary = null; S.modal = G.fired ? { type: 'jobs' } : null; S.view = 'dashboard'; commit(); break;
       case 'takejob': Game.takeJob(G, id); S.modal = null; S.view = 'dashboard'; toast('Welcome to ' + G.teams[id].name); commit(); break;
-      case 'export': S.io = Game.serialize(G); S.ioMsg = 'Save code shown below. Keep it somewhere safe.'; render(); break;
       case 'copysave': {
-        const str = Game.serialize(G);
-        S.io = str;
-        const done = ok => { S.ioMsg = ok ? 'Save code copied to the clipboard.' : 'Copy failed. Select the text below and copy it manually.'; render(); };
-        try { navigator.clipboard.writeText(str).then(() => done(true), () => done(false)); } catch (err) { done(false); }
+        // clipboard must be written inside the click, so prepare the code ahead and copy on the second click if needed
+        const done = ok => { S.ioMsg = ok ? `Save code copied (${Math.round(S.io.length / 1024)} KB). Paste it into the game on another device.` : 'Copy failed. Select the code below and copy it manually.'; render(); };
+        if (S.io && S.ioFor === G) { try { navigator.clipboard.writeText(S.io).then(() => done(true), () => done(false)); } catch (err) { done(false); } break; }
+        PCM.Saves.encode(G).then(code => {
+          S.io = code; S.ioFor = G;
+          try { navigator.clipboard.writeText(code).then(() => done(true), () => { S.ioMsg = 'Save code ready below. Click Copy save code again, or copy it manually.'; render(); }); } catch (err) { done(false); }
+        });
         break;
       }
       case 'import': { const v = document.getElementById('io')?.value || ''; if (v.trim()) loadFromString(v); break; }
       case 'newgame-ask': S.modal = { type: 'newgame' }; render(); break;
-      case 'newgame': Game.clearSave(); G = null; S.modal = null; S.newTeam = null; S.hasSave = false; render(); break;
+      case 'newgame': PCM.Saves.flushAuto(); G = null; S.modal = null; S.newTeam = null; S.io = ''; S.ioMsg = ''; refreshSlots(); render(); break;
     }
   }
   function closeModal() {
@@ -884,6 +932,7 @@ PCM.UI = (function () {
     if (el.id === 'iofile' && el.files && el.files[0]) {
       const fr = new FileReader();
       fr.onload = () => loadFromString(String(fr.result));
+      el.value = '';
       fr.readAsText(el.files[0]);
       return;
     }
@@ -913,9 +962,15 @@ PCM.UI = (function () {
     document.addEventListener('change', handleChange);
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeModal();
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && G) { e.preventDefault(); quickSave(); }
       if (e.key === 'Enter' && e.target.matches('a.rname, [data-act].teamcard')) e.target.click();
     });
-    try { S.hasSave = !!localStorage.getItem('pcm26-save-v1'); } catch (e) { S.hasSave = false; }
+    PCM.Saves.onChange(refreshSlots);
+    PCM.Saves.init();
+    refreshSlots();
+    // make sure the latest progress reaches the cloud when the page is closed or hidden
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') PCM.Saves.flushAuto(); });
+    window.addEventListener('pagehide', () => PCM.Saves.flushAuto());
     render();
   }
 
