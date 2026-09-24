@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node test/sim.test.js && node test/real.test.js",
     "start": "npx --yes http-server -c-1 -p 8080 .",
-    "build:real": "node tools/build-real-db.js"
+    "build:real": "node tools/build-real-db.js --seed tools/real/rosters-2026.txt",
+    "build:real:wiki": "node tools/build-real-db.js"
   },
   "license": "MIT"
 }

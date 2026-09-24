@@ -13,7 +13,7 @@ PCM.UI = (function () {
     view: 'dashboard', squadSort: { k: 'ovr', d: -1 }, mktSort: { k: 'ovr', d: -1 },
     mkt: { q: '', spec: '', maxAge: '', minOvr: '', maxSal: '', fa: false },
     raceTab: 'stage', stageView: null, sel: null, tactic: 'bal', live: null, modal: null, standTab: 'teams',
-    newTeam: null, world: 'fictional', slots: null, saveStatus: '', confirmDel: null, toast: '', io: '', ioMsg: '',
+    newTeam: null, world: PCM.REAL ? 'real' : 'fictional', slots: null, saveStatus: '', confirmDel: null, toast: '', io: '', ioMsg: '',
   };
 
   // ---------- small helpers ----------
