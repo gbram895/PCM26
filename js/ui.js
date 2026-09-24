@@ -13,11 +13,11 @@ PCM.UI = (function () {
     view: 'dashboard', squadSort: { k: 'ovr', d: -1 }, mktSort: { k: 'ovr', d: -1 },
     mkt: { q: '', spec: '', maxAge: '', minOvr: '', maxSal: '', fa: false },
     raceTab: 'stage', stageView: null, sel: null, tactic: 'bal', live: null, modal: null, standTab: 'teams',
-    newTeam: null, hasSave: false, toast: '', io: '', ioMsg: '',
+    newTeam: null, world: 'fictional', hasSave: false, toast: '', io: '', ioMsg: '',
   };
 
   // ---------- small helpers ----------
-  const flag = nat => (DATA.NATIONS[nat] ? DATA.NATIONS[nat].flag : '🏳️');
+  const flag = nat => DATA.natFlag(nat);
   const me = () => Game.player(G);
   const isMine = rid => G.riders[rid] && G.riders[rid].teamId === G.playerTeamId;
   function rLink(r, full) {
@@ -165,10 +165,16 @@ PCM.UI = (function () {
 
   // ---------- new game ----------
   function newGameView() {
-    const cards = DATA.TEAMS.map(t => `<button class="teamcard ${S.newTeam === t.id ? 'on' : ''}" data-act="pickteam" data-id="${t.id}">
+    const real = S.world === 'real' && Game.realAvailable();
+    const worldPick = !Game.realAvailable() ? '' : `<div class="row"><span class="label">Rider database</span>
+        <button class="btn sm ${real ? '' : 'primary'}" data-act="world" data-w="fictional">Fictional world</button>
+        <button class="btn sm ${real ? 'primary' : ''}" data-act="world" data-w="real" ${Game.realAvailable() ? '' : 'disabled'}>Real peloton ${Game.realAvailable() ? PCM.REAL.season : ''}</button>
+        <span class="small muted">${Game.realAvailable() ? (real ? `Real riders and races. ${PCM.REAL.teams.reduce((n, t) => n + t.riders.length, 0)} riders from ${h(PCM.REAL.source || 'public data')}; ratings are estimates.` : 'Generated riders, teams and races.') : 'Real peloton not installed: run <code>npm run build:real</code>.'}</span></div>`;
+    const cards = Game.teamDefs(real ? 'real' : 'fictional').map(t => `<button class="teamcard ${S.newTeam === t.id ? 'on' : ''}" data-act="pickteam" data-id="${t.id}">
         <div class="kit" style="background:linear-gradient(90deg, ${t.c1} 70%, ${t.c2} 70%)"></div>
         <h3>${h(t.name)}</h3>
-        <div class="row between small"><span>${flag(t.nat)} ${h(DATA.NATIONS[t.nat].name)}</span>${stars(58 + t.prestige * 5)}</div>
+        <div class="row between small"><span>${flag(t.nat)} ${h(DATA.natName(t.nat))}</span>${stars(60 + t.prestige * 5)}</div>
+        ${t.riders ? `<div class="small muted">Leaders: ${h(t.riders.slice().sort((a, b) => b.level - a.level).slice(0, 2).map(x => x.last).join(', '))}</div>` : ''}
         <div class="small muted">${['Underdog wildcard squad', 'Small budget, big ambitions', 'Solid mid-table WorldTour team', 'Contender with star riders', 'Superteam: win everything'][t.prestige - 1]}</div>
       </button>`).join('');
     return `<div class="intro">
@@ -180,6 +186,7 @@ PCM.UI = (function () {
       ${S.hasSave ? `<div class="panel"><div class="row between"><div><h3>Continue your career</h3><p class="muted small">A saved game was found in this browser.</p></div><button class="btn primary" data-act="loadsave">Continue career</button></div></div>` : ''}
       <div class="panel">
         <header><h2>Choose your team</h2><span class="muted small">Stars show the team's standing. Bigger teams have deeper squads and tougher board objectives.</span></header>
+        ${worldPick}
         <div class="teamcards">${cards}</div>
         <div class="row">
           <div class="field"><label class="label" for="mgr">Your name</label><input type="text" id="mgr" maxlength="30" value="${h(S.mgr || '')}" placeholder="Manager"></div>
@@ -604,7 +611,7 @@ PCM.UI = (function () {
     const mood = conf >= 75 ? ['Delighted', 'good'] : conf >= 50 ? ['Satisfied', 'good'] : conf >= 30 ? ['Concerned', 'warn'] : ['Losing patience', 'bad'];
     const honours = G.honours.filter(x => x.team === t.name);
     return `<div class="pagehead"><div><div class="label">Club</div><h1>${h(t.name)}</h1></div>
-      <div class="stats"><div class="stat"><span class="label">Nation</span><span class="v">${flag(t.nat)}</span></div><div class="stat"><span class="label">Standing</span><span class="v">${stars(58 + t.prestige * 5)}</span></div></div></div>
+      <div class="stats"><div class="stat"><span class="label">Nation</span><span class="v">${flag(t.nat)}</span></div><div class="stat"><span class="label">Standing</span><span class="v">${stars(60 + t.prestige * 5)}</span></div></div></div>
       <div class="grid g2">
         <div class="panel"><header><h3>Board confidence</h3><span class="pill ${mood[1]}">${mood[0]}</span></header>
           ${meter(conf)}<p class="small muted">Each objective met at season end raises confidence; each one missed lowers it. Drop too low and you'll be dismissed.</p>
@@ -685,7 +692,7 @@ PCM.UI = (function () {
           <button class="btn primary" data-act="offer" data-id="${r.id}" style="align-self:flex-end">Make offer</button></div>
         <p class="small muted">He's asking about ${U.money(ask)} per year. You have ${U.money(me().cash)} in the bank.</p></div>`;
     }
-    return `<header><div class="row" style="gap:16px"><div class="bigovr num">${o.toFixed(0)}</div><div><div class="label">${h(DATA.SPECIALTIES[Riders.specialty(r)].long)} · ${age(r)} years · ${flag(r.nat)} ${h(DATA.NATIONS[r.nat].name)}</div><h2>${h(Riders.fullName(r))}</h2><div class="small">${tCell(r.teamId)} · Potential ${stars(pot)}${mine ? '' : ' <span class="muted">(scouted)</span>'}</div></div></div><button class="x" data-act="closemodal" aria-label="Close">×</button></header>
+    return `<header><div class="row" style="gap:16px"><div class="bigovr num">${o.toFixed(0)}</div><div><div class="label">${h(DATA.SPECIALTIES[Riders.specialty(r)].long)} · ${age(r)} years · ${flag(r.nat)} ${h(DATA.natName(r.nat))}</div><h2>${h(Riders.fullName(r))}</h2><div class="small">${tCell(r.teamId)} · Potential ${stars(pot)}${mine ? '' : ' <span class="muted">(scouted)</span>'}</div></div></div><button class="x" data-act="closemodal" aria-label="Close">×</button></header>
       ${m.msg ? `<div class="msg ${m.ok ? 'good' : 'bad'}">${h(m.msg)}</div>` : ''}
       <div class="attrs">${attrs}</div>
       <div class="stats small">
@@ -727,14 +734,14 @@ PCM.UI = (function () {
   function jobsModal() {
     const offers = Game.jobOffers(G);
     return `<header><h2>Job offers</h2></header><p>Pick your next team. You'll keep the same world and calendar.</p>
-      <div class="teamcards">${offers.map(t => `<button class="teamcard" data-act="takejob" data-id="${t.id}"><div class="kit" style="background:linear-gradient(90deg, ${t.c1} 70%, ${t.c2} 70%)"></div><h3>${h(t.name)}</h3><div class="row between small"><span>${flag(t.nat)} Strength ${Game.teamStrength(G, t).toFixed(1)}</span>${stars(58 + t.prestige * 5)}</div></button>`).join('')}</div>`;
+      <div class="teamcards">${offers.map(t => `<button class="teamcard" data-act="takejob" data-id="${t.id}"><div class="kit" style="background:linear-gradient(90deg, ${t.c1} 70%, ${t.c2} 70%)"></div><h3>${h(t.name)}</h3><div class="row between small"><span>${flag(t.nat)} Strength ${Game.teamStrength(G, t).toFixed(1)}</span>${stars(60 + t.prestige * 5)}</div></button>`).join('')}</div>`;
   }
 
   // ---------- actions ----------
   function startNewGame() {
     const mgr = (document.getElementById('mgr')?.value || '').trim() || 'Manager';
     const cname = document.getElementById('cname')?.value || '';
-    G = Game.newGame({ teamId: S.newTeam, manager: mgr, customName: cname });
+    G = Game.newGame({ teamId: S.newTeam, manager: mgr, customName: cname, world: S.world });
     Object.assign(S, { view: 'dashboard', sel: null, live: null, modal: null, io: '', ioMsg: '' });
     commit();
   }
@@ -796,6 +803,7 @@ PCM.UI = (function () {
     switch (act) {
       case 'pickteam': S.newTeam = id; S.mgr = document.getElementById('mgr')?.value || ''; S.cname = document.getElementById('cname')?.value || ''; render(); break;
       case 'startgame': startNewGame(); break;
+      case 'world': S.world = el.dataset.w; S.newTeam = null; S.mgr = document.getElementById('mgr')?.value || ''; S.cname = document.getElementById('cname')?.value || ''; render(); break;
       case 'loadsave': G = Game.load(); if (G) { S.view = 'dashboard'; render(); } break;
       case 'nav': if (S.live) { PCM.Live.stop(); S.live = null; } S.view = el.dataset.view; S.modal = null; S.stageView = null; render(); window.scrollTo(0, 0); break;
       case 'continue': onContinue(); break;

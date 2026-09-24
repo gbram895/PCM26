@@ -1,2 +1,5 @@
 node_modules/
 .DS_Store
+# real-world roster is generated locally, not committed
+js/data-real.js
+tools/real/cache/

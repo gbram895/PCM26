@@ -4,8 +4,9 @@
   "description": "PCM26 – a pro cycling team management sim that runs in the browser",
   "private": true,
   "scripts": {
-    "test": "node test/sim.test.js",
-    "start": "npx --yes http-server -c-1 -p 8080 ."
+    "test": "node test/sim.test.js && node test/real.test.js",
+    "start": "npx --yes http-server -c-1 -p 8080 .",
+    "build:real": "node tools/build-real-db.js"
   },
   "license": "MIT"
 }

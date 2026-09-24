@@ -100,32 +100,54 @@ PCM.DATA = (function () {
 
   // cls: GT grand tour, WT world tour stage race, PRO lower stage race, MON monument, CL classic
   const CALENDAR = [
-    { id: 'sct', name: 'Southern Cross Tour', country: 'AUS', week: 2, weeks: 1, kind: 'stage', cls: 'PRO', pattern: 'sunny', stages: 6 },
-    { id: 'alg', name: 'Algarve Sun Tour', country: 'POR', week: 4, weeks: 1, kind: 'stage', cls: 'PRO', pattern: 'sunny', stages: 5 },
-    { id: 'owc', name: 'Opening Weekend Classic', country: 'BEL', week: 6, weeks: 1, kind: 'oneday', cls: 'CL', type: 'cobbles', km: 202 },
-    { id: 'wrc', name: 'White Roads Classic', country: 'ITA', week: 7, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 215 },
-    { id: 'rts', name: 'Race to the Sun', country: 'FRA', week: 8, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'balanced', stages: 8 },
-    { id: 'tst', name: 'Two Seas Tour', country: 'ITA', week: 9, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'hilly', stages: 7 },
-    { id: 'pri', name: 'Primavera Classic', country: 'ITA', week: 10, weeks: 1, kind: 'oneday', cls: 'MON', type: 'flat', km: 294, lateClimbs: 2 },
-    { id: 'cat', name: 'Catalan Mountains Tour', country: 'ESP', week: 11, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'mountain', stages: 7 },
-    { id: 'fcc', name: 'Flemish Cobbles Classic', country: 'BEL', week: 12, weeks: 1, kind: 'oneday', cls: 'CL', type: 'cobbles', km: 208 },
-    { id: 'tfh', name: 'Tour of the Flemish Hills', country: 'BEL', week: 13, weeks: 1, kind: 'oneday', cls: 'MON', type: 'cobbles', km: 268 },
-    { id: 'hon', name: 'Hell of the North', country: 'FRA', week: 14, weeks: 1, kind: 'oneday', cls: 'MON', type: 'cobbles', km: 258, flatCobbles: true },
-    { id: 'lgr', name: 'Limburg Gold Race', country: 'NED', week: 15, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 253 },
-    { id: 'doy', name: 'La Doyenne', country: 'BEL', week: 16, weeks: 1, kind: 'oneday', cls: 'MON', type: 'hilly', km: 259 },
-    { id: 'twa', name: 'Tour of the Western Alps', country: 'SUI', week: 17, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'mountain', stages: 6 },
-    { id: 'cro', name: 'Corsa Rosa', country: 'ITA', week: 19, weeks: 3, kind: 'stage', cls: 'GT', pattern: 'gtB', stages: 21 },
-    { id: 'cda', name: 'Critérium des Alpes', country: 'FRA', week: 23, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'balanced', stages: 8 },
-    { id: 'sst', name: 'Swiss Summits Tour', country: 'SUI', week: 24, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'mountain', stages: 8 },
-    { id: 'lgb', name: 'La Grande Boucle', country: 'FRA', week: 26, weeks: 3, kind: 'stage', cls: 'GT', pattern: 'gtA', stages: 21 },
-    { id: 'bsc', name: 'Basque Summer Classic', country: 'ESP', week: 30, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 223 },
-    { id: 'blt', name: 'Baltic Tour', country: 'POL', week: 31, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'balanced', stages: 7 },
-    { id: 'bnx', name: 'Benelux Tour', country: 'NED', week: 32, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'flat', stages: 6 },
-    { id: 'vds', name: 'Vuelta del Sol', country: 'ESP', week: 34, weeks: 3, kind: 'stage', cls: 'GT', pattern: 'gtC', stages: 21 },
-    { id: 'mgp', name: 'Maple Grand Prix', country: 'CAN', week: 38, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 221 },
-    { id: 'pdc', name: 'Piedmont Classic', country: 'ITA', week: 39, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 196 },
-    { id: 'rfl', name: 'Race of the Falling Leaves', country: 'ITA', week: 40, weeks: 1, kind: 'oneday', cls: 'MON', type: 'mountain', km: 252 },
+    { id: 'sct', realName: "Tour Down Under", name: 'Southern Cross Tour', country: 'AUS', week: 2, weeks: 1, kind: 'stage', cls: 'PRO', pattern: 'sunny', stages: 6 },
+    { id: 'alg', realName: "Volta ao Algarve", name: 'Algarve Sun Tour', country: 'POR', week: 4, weeks: 1, kind: 'stage', cls: 'PRO', pattern: 'sunny', stages: 5 },
+    { id: 'owc', realName: "Omloop Nieuwsblad", name: 'Opening Weekend Classic', country: 'BEL', week: 6, weeks: 1, kind: 'oneday', cls: 'CL', type: 'cobbles', km: 202 },
+    { id: 'wrc', realName: "Strade Bianche", name: 'White Roads Classic', country: 'ITA', week: 7, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 215 },
+    { id: 'rts', realName: "Paris–Nice", name: 'Race to the Sun', country: 'FRA', week: 8, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'balanced', stages: 8 },
+    { id: 'tst', realName: "Tirreno–Adriatico", name: 'Two Seas Tour', country: 'ITA', week: 9, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'hilly', stages: 7 },
+    { id: 'pri', realName: "Milan–San Remo", name: 'Primavera Classic', country: 'ITA', week: 10, weeks: 1, kind: 'oneday', cls: 'MON', type: 'flat', km: 294, lateClimbs: 2 },
+    { id: 'cat', realName: "Volta a Catalunya", name: 'Catalan Mountains Tour', country: 'ESP', week: 11, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'mountain', stages: 7 },
+    { id: 'fcc', realName: "E3 Saxo Classic", name: 'Flemish Cobbles Classic', country: 'BEL', week: 12, weeks: 1, kind: 'oneday', cls: 'CL', type: 'cobbles', km: 208 },
+    { id: 'tfh', realName: "Tour of Flanders", name: 'Tour of the Flemish Hills', country: 'BEL', week: 13, weeks: 1, kind: 'oneday', cls: 'MON', type: 'cobbles', km: 268 },
+    { id: 'hon', realName: "Paris–Roubaix", name: 'Hell of the North', country: 'FRA', week: 14, weeks: 1, kind: 'oneday', cls: 'MON', type: 'cobbles', km: 258, flatCobbles: true },
+    { id: 'lgr', realName: "Amstel Gold Race", name: 'Limburg Gold Race', country: 'NED', week: 15, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 253 },
+    { id: 'doy', realName: "Liège–Bastogne–Liège", name: 'La Doyenne', country: 'BEL', week: 16, weeks: 1, kind: 'oneday', cls: 'MON', type: 'hilly', km: 259 },
+    { id: 'twa', realName: "Tour de Romandie", name: 'Tour of the Western Alps', country: 'SUI', week: 17, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'mountain', stages: 6 },
+    { id: 'cro', realName: "Giro d'Italia", name: 'Corsa Rosa', country: 'ITA', week: 19, weeks: 3, kind: 'stage', cls: 'GT', pattern: 'gtB', stages: 21 },
+    { id: 'cda', realName: "Tour Auvergne-Rhône-Alpes", name: 'Critérium des Alpes', country: 'FRA', week: 23, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'balanced', stages: 8 },
+    { id: 'sst', realName: "Tour de Suisse", name: 'Swiss Summits Tour', country: 'SUI', week: 24, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'mountain', stages: 8 },
+    { id: 'lgb', realName: "Tour de France", name: 'La Grande Boucle', country: 'FRA', week: 26, weeks: 3, kind: 'stage', cls: 'GT', pattern: 'gtA', stages: 21 },
+    { id: 'bsc', realName: "Clásica San Sebastián", name: 'Basque Summer Classic', country: 'ESP', week: 30, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 223 },
+    { id: 'blt', realName: "Tour de Pologne", name: 'Baltic Tour', country: 'POL', week: 31, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'balanced', stages: 7 },
+    { id: 'bnx', realName: "Renewi Tour", name: 'Benelux Tour', country: 'NED', week: 32, weeks: 1, kind: 'stage', cls: 'WT', pattern: 'flat', stages: 6 },
+    { id: 'vds', realName: "Vuelta a España", name: 'Vuelta del Sol', country: 'ESP', week: 34, weeks: 3, kind: 'stage', cls: 'GT', pattern: 'gtC', stages: 21 },
+    { id: 'mgp', realName: "Grand Prix Cycliste de Québec", name: 'Maple Grand Prix', country: 'CAN', week: 38, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 221 },
+    { id: 'pdc', realName: "Giro dell'Emilia", name: 'Piedmont Classic', country: 'ITA', week: 39, weeks: 1, kind: 'oneday', cls: 'CL', type: 'hilly', km: 196 },
+    { id: 'rfl', realName: "Il Lombardia", name: 'Race of the Falling Leaves', country: 'ITA', week: 40, weeks: 1, kind: 'oneday', cls: 'MON', type: 'mountain', km: 252 },
   ];
+
+
+  // IOC code -> [country name, ISO 3166 alpha-2] for flags of real riders from any nation
+  const NAT_INFO = {
+    UAE: ['United Arab Emirates', 'AE'], BRN: ['Bahrain', 'BH'], ALB: ['Albania', 'AL'], ALG: ['Algeria', 'DZ'], AND: ['Andorra', 'AD'], ARG: ['Argentina', 'AR'], AUS: ['Australia', 'AU'], AUT: ['Austria', 'AT'],
+    AZE: ['Azerbaijan', 'AZ'], BEL: ['Belgium', 'BE'], BLR: ['Belarus', 'BY'], BRA: ['Brazil', 'BR'], BUL: ['Bulgaria', 'BG'], CAN: ['Canada', 'CA'],
+    CHI: ['Chile', 'CL'], CHN: ['China', 'CN'], COL: ['Colombia', 'CO'], CRC: ['Costa Rica', 'CR'], CRO: ['Croatia', 'HR'], CZE: ['Czech Republic', 'CZ'],
+    DEN: ['Denmark', 'DK'], ECU: ['Ecuador', 'EC'], ERI: ['Eritrea', 'ER'], ESP: ['Spain', 'ES'], EST: ['Estonia', 'EE'], ETH: ['Ethiopia', 'ET'],
+    FIN: ['Finland', 'FI'], FRA: ['France', 'FR'], GBR: ['Great Britain', 'GB'], GER: ['Germany', 'DE'], GRE: ['Greece', 'GR'], HUN: ['Hungary', 'HU'],
+    IRL: ['Ireland', 'IE'], ISR: ['Israel', 'IL'], ITA: ['Italy', 'IT'], JPN: ['Japan', 'JP'], KAZ: ['Kazakhstan', 'KZ'], KEN: ['Kenya', 'KE'],
+    KOR: ['South Korea', 'KR'], LAT: ['Latvia', 'LV'], LTU: ['Lithuania', 'LT'], LUX: ['Luxembourg', 'LU'], MAR: ['Morocco', 'MA'], MEX: ['Mexico', 'MX'],
+    MDA: ['Moldova', 'MD'], NED: ['Netherlands', 'NL'], NOR: ['Norway', 'NO'], NZL: ['New Zealand', 'NZ'], PAN: ['Panama', 'PA'], POL: ['Poland', 'PL'],
+    POR: ['Portugal', 'PT'], PUR: ['Puerto Rico', 'PR'], ROU: ['Romania', 'RO'], RSA: ['South Africa', 'ZA'], RUS: ['Russia', 'RU'], RWA: ['Rwanda', 'RW'],
+    SLO: ['Slovenia', 'SI'], SRB: ['Serbia', 'RS'], SUI: ['Switzerland', 'CH'], SVK: ['Slovakia', 'SK'], SWE: ['Sweden', 'SE'], THA: ['Thailand', 'TH'],
+    TUR: ['Turkey', 'TR'], UKR: ['Ukraine', 'UA'], URU: ['Uruguay', 'UY'], USA: ['United States', 'US'], UZB: ['Uzbekistan', 'UZ'], VEN: ['Venezuela', 'VE'],
+  };
+  function natName(code) { return NATIONS[code] ? NATIONS[code].name : NAT_INFO[code] ? NAT_INFO[code][0] : code || 'Unknown'; }
+  function natFlag(code) {
+    if (NATIONS[code]) return NATIONS[code].flag;
+    const iso = NAT_INFO[code] && NAT_INFO[code][1];
+    return iso ? String.fromCodePoint(...[...iso].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '🏳️';
+  }
 
   const SEASON_WEEKS = 41;
 
@@ -205,6 +227,6 @@ PCM.DATA = (function () {
     intense: { label: 'Intense', form: 74, growth: 1.7, fatigue: 0.55 },
   };
 
-  return { NATIONS, TEAMS, PATTERNS, CALENDAR, SEASON_WEEKS, UCI, PRIZE_PER_POINT, STAGE_POINTS, KOM_POINTS,
+  return { NATIONS, NAT_INFO, natName, natFlag, TEAMS, PATTERNS, CALENDAR, SEASON_WEEKS, UCI, PRIZE_PER_POINT, STAGE_POINTS, KOM_POINTS,
     CLIMB_PREFIX, CLIMB_NAMES, ATTRS, SPECIALTIES, TEMPLATES, TRAINING_FOCUS, TRAINING_LOAD };
 })();

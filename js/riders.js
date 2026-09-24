@@ -149,7 +149,7 @@ PCM.Riders = (function () {
     const keys = ATTR_KEYS.slice().sort((x, y) => tpl[y] - tpl[x]);
     keys.forEach((k, i) => {
       const w = delta >= 0 ? (i < 3 ? 1 : 0.5) : (k === 'st' || k === 're' ? 1.2 : 0.9);
-      r.a[k] = U.clamp(r.a[k] + delta * w + R.normal(0, 0.3), 35, 90);
+      r.a[k] = U.clamp(r.a[k] + delta * w + R.normal(0, 0.3), 35, Math.max(90, r.a[k]));
     });
     if (r.pot < ovr(r)) r.pot = U.round(ovr(r), 1);
     return ovr(r) - before;

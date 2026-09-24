@@ -71,7 +71,42 @@ PCM.Game = (function () {
     }
   }
 
-  function newGame({ teamId, manager, seed, customName }) {
+  // Real-world rosters come from js/data-real.js (built by tools/build-real-db.js)
+  function realAvailable() { return !!(PCM.REAL && PCM.REAL.teams && PCM.REAL.teams.length); }
+  function teamDefs(world) { return world === 'real' && realAvailable() ? PCM.REAL.teams : DATA.TEAMS; }
+
+  function realRider(G, def) {
+    const born = parseInt(String(def.born).slice(0, 4), 10) || (G.year - 27);
+    const ageYears = U.clamp(G.year - born, 18, 42);
+    const type = DATA.TEMPLATES[def.type] ? def.type : 'rouleur';
+    const r = Riders.create({ type, quality: def.level - 4, year: G.year, ageYears, nat: 'BEL' });
+    const d = def.level - Riders.ovr(r);
+    for (const k of Riders.ATTR_KEYS) r.a[k] = U.clamp(r.a[k] + d, 35, 95);
+    r.first = def.first || '';
+    r.last = def.last || def.name;
+    r.nat = def.nat || 'UNK';
+    r.born = born;
+    const o = Riders.ovr(r);
+    r.pot = U.round(ageYears <= 25 ? Math.min(95, o + (26 - ageYears) * R.range(0.6, 1.8)) : o + R.range(0, 0.6), 1);
+    r.real = true;
+    return r;
+  }
+  function genRealTeam(G, team, def) {
+    for (const rd of def.riders) {
+      const r = realRider(G, rd);
+      signTo(G, r, team, Riders.salaryAsk(r, G.year) * R.range(0.85, 1.15), G.year + R.int(0, 2));
+    }
+    // top up thin rosters with fictional neo-pros
+    while (team.riders.length < 24) {
+      const r = Riders.createYouth(G.year, team.nat, 66 + team.prestige * 2.5 + R.normal(0, 3));
+      signTo(G, r, team, Riders.salaryAsk(r, G.year), G.year + R.int(1, 2));
+    }
+  }
+  function calendarFor(G) {
+    return DATA.CALENDAR.map(tpl => Race.instantiate(G.world === 'real' && tpl.realName ? { ...tpl, name: tpl.realName } : tpl, G.year));
+  }
+
+  function newGame({ teamId, manager, seed, customName, world }) {
     seed = seed || (Math.floor(Math.random() * 1e9) + 1);
     R.seed(seed);
     Riders.setNextId(1);
@@ -79,22 +114,25 @@ PCM.Game = (function () {
       version: 1, seed, year: START_YEAR, week: 1, playerTeamId: teamId, manager: manager || 'Manager',
       teams: {}, riders: {}, freeAgents: [], calendar: [], news: [], inbox: [], ledger: [], honours: [], history: [],
       board: { confidence: 60, objectives: [] }, fired: false, pendingSummary: null,
+      world: world === 'real' && realAvailable() ? 'real' : 'fictional',
     };
-    for (const t of DATA.TEAMS) {
+    const defs = teamDefs(G.world);
+    for (const t of defs) {
       G.teams[t.id] = {
         id: t.id, name: t.name, nat: t.nat, prestige: t.prestige, c1: t.c1, c2: t.c2,
         riders: [], cash: 0, sponsor: 0, season: { pts: 0, wins: 0 }, log: [], history: [], expRank: 0,
       };
     }
     if (customName && customName.trim()) G.teams[teamId].name = customName.trim().slice(0, 40);
-    for (const id in G.teams) genTeamRiders(G, G.teams[id]);
+    if (G.world === 'real') defs.forEach(d => genRealTeam(G, G.teams[d.id], d));
+    else for (const id in G.teams) genTeamRiders(G, G.teams[id]);
     for (const id in G.teams) {
       const t = G.teams[id];
       t.sponsor = Math.round((payroll(G, t) * 1.12 + 250000 * t.prestige + 800000) / 10000) * 10000;
       t.cash = Math.round(t.sponsor * 0.15 / 10000) * 10000;
     }
     addFreeAgents(G, 30, 18);
-    G.calendar = DATA.CALENDAR.map(tpl => Race.instantiate(tpl, G.year));
+    G.calendar = calendarFor(G);
     computeExpectedRanks(G);
     setObjectives(G);
     const team = G.teams[teamId];
@@ -462,7 +500,7 @@ PCM.Game = (function () {
       r.morale = U.clamp((r.morale + 65) / 2, 30, 90);
     }
     for (const id in G.teams) { G.teams[id].season = { pts: 0, wins: 0 }; G.teams[id].log = []; }
-    G.calendar = DATA.CALENDAR.map(tpl => Race.instantiate(tpl, G.year));
+    G.calendar = calendarFor(G);
     computeExpectedRanks(G);
 
     const summary = { year, rank, objectives, confidence: conf, fired, retired, left, developments, sponsorOld, sponsorNew: t.sponsor, cash: t.cash };
@@ -515,7 +553,7 @@ PCM.Game = (function () {
   function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 
   return {
-    newGame, advance, processWeek, startRace, simStage, autoRace, currentRace, nextRace, endSeason, jobOffers, takeJob,
+    newGame, realAvailable, teamDefs, advance, processWeek, startRace, simStage, autoRace, currentRace, nextRace, endSeason, jobOffers, takeJob,
     offer, renew, release, releaseCost, askingSalary, askingFee, payroll, player, teamRanking, riderRanking, teamStrength,
     evalObjective, news, inbox, ledger, serialize, deserialize, save, load, clearSave, inRunningRace,
     MAX_ROSTER, MIN_ROSTER,

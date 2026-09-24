@@ -12,6 +12,21 @@ npm start   # http://localhost:8080
 
 Progress is saved automatically in the browser's localStorage. Use **Game → Show save code** to move a career between devices.
 
+## Real peloton (optional)
+
+The game ships with a fictional world. To play with the real 2026 WorldTeam riders, build the roster yourself from Wikipedia (needs internet access to `en.wikipedia.org`):
+
+```sh
+npm run build:real
+```
+
+This writes `js/data-real.js`, which git ignores so real rider data never lands in this public repo. A **Real peloton** option then appears on the new-game screen, with real race names.
+
+- Rosters, nationalities and birthdates come from Wikipedia's team season pages and rider articles.
+- Ratings are estimates. About 150 well-known riders are hand-rated in `tools/real/ratings.csv`; everyone else is estimated from age and the major wins listed on their Wikipedia page. Edit the CSV and re-run to change them.
+- Responses are cached in `tools/real/cache/`. Use `--refresh` to re-download, or `--season 2027` for another year.
+- To choose teams yourself, list their Wikipedia article titles in `tools/real/teams.txt`, one per line.
+
 ## What you do
 
 - **Choose one of 18 fictional teams**, from a superteam to an underdog wildcard. Each team has its own budget, squad depth and board expectations.
@@ -36,6 +51,8 @@ Progress is saved automatically in the browser's localStorage. Use **Game → Sh
 | `js/ui.js` | All screens and event handling |
 | `js/live.js` | Live stage playback |
 | `test/sim.test.js` | Headless test that plays three full seasons |
+| `tools/build-real-db.js` | Builds the optional real-peloton roster from Wikipedia |
+| `test/real.test.js` | Tests the roster parsers and a season on a real-style database |
 
 The engine files (`core`, `data`, `riders`, `race`, `game`) have no DOM access, so they run in Node for testing:
 

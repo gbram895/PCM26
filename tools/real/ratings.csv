@@ -1,0 +1,152 @@
+# Hand-tuned ratings for well-known riders. Game scale: 90+ generational, 85+ world-class, 80+ top level, 75 solid pro, 70 domestique.
+# type: gc | climber | sprinter | puncheur | cobbles | tt | rouleur
+# Riders not listed get an estimate from age and major wins. Edit freely, then re-run npm run build:real.
+name,type,level
+Tadej Pogačar,gc,93
+Jonas Vingegaard,gc,90
+Remco Evenepoel,gc,88
+Primož Roglič,gc,85
+João Almeida,gc,86
+Juan Ayuso,gc,84
+Isaac del Toro,gc,85
+Florian Lipowitz,gc,84
+Matteo Jorgenson,gc,83
+Carlos Rodríguez,gc,82
+Enric Mas,gc,82
+Mikel Landa,gc,80
+Adam Yates,gc,81
+Simon Yates,gc,82
+Richard Carapaz,gc,82
+Egan Bernal,gc,82
+Ben O'Connor,gc,82
+Felix Gall,gc,83
+Antonio Tiberi,gc,82
+Derek Gee,gc,82
+Thymen Arensman,gc,82
+Oscar Onley,gc,83
+Jai Hindley,gc,82
+Aleksandr Vlasov,gc,80
+Pello Bilbao,gc,79
+David Gaudu,gc,79
+Cian Uijtdebroeks,gc,81
+Tobias Halland Johannessen,gc,81
+Max Poole,gc,80
+Paul Seixas,gc,82
+Michael Storer,gc,81
+Wilco Kelderman,gc,79
+Sepp Kuss,climber,83
+Giulio Ciccone,climber,81
+Lenny Martinez,climber,81
+Santiago Buitrago,climber,81
+Jay Vine,climber,81
+Guillaume Martin,climber,78
+Einer Rubio,climber,79
+Marc Soler,climber,80
+Pavel Sivakov,climber,80
+Rafał Majka,climber,78
+Jefferson Cepeda,climber,79
+Pablo Castrillo,climber,79
+Alex Baudin,climber,79
+Davide Piganzoli,climber,79
+Giulio Pellizzari,climber,82
+Harold Tejada,climber,78
+Chris Harper,climber,79
+Joshua Tarling,tt,84
+Filippo Ganna,tt,85
+Stefan Küng,tt,82
+Edoardo Affini,tt,80
+Brandon McNulty,tt,82
+Stefan Bissegger,tt,80
+Mikkel Bjerg,tt,79
+Ethan Hayter,tt,80
+Bruno Armirail,tt,79
+Tobias Foss,tt,80
+Magnus Sheffield,tt,81
+Søren Wærenskjold,tt,81
+Jonathan Milan,sprinter,87
+Tim Merlier,sprinter,86
+Jasper Philipsen,sprinter,87
+Olav Kooij,sprinter,85
+Biniam Girmay,sprinter,83
+Kaden Groves,sprinter,84
+Dylan Groenewegen,sprinter,83
+Sam Bennett,sprinter,79
+Fabio Jakobsen,sprinter,79
+Juan Sebastián Molano,sprinter,81
+Pascal Ackermann,sprinter,81
+Arvid de Kleijn,sprinter,80
+Paul Magnier,sprinter,84
+Sam Welsford,sprinter,81
+Danny van Poppel,sprinter,80
+Bryan Coquard,sprinter,80
+Phil Bauhaus,sprinter,81
+Jordi Meeus,sprinter,81
+Tobias Lund Andresen,sprinter,82
+Gerben Thijssen,sprinter,80
+Casper van Uden,sprinter,81
+Matthew Brennan,sprinter,83
+Jake Stewart,sprinter,79
+Alberto Dainese,sprinter,79
+Max Kanter,sprinter,78
+Arnaud De Lie,sprinter,84
+Milan Fretin,sprinter,79
+Mathieu van der Poel,cobbles,91
+Wout van Aert,cobbles,87
+Mads Pedersen,cobbles,88
+Jasper Stuyven,cobbles,82
+Christophe Laporte,cobbles,82
+Nils Politt,cobbles,81
+Matteo Trentin,cobbles,79
+Florian Vermeersch,cobbles,81
+Dylan van Baarle,cobbles,80
+Tiesj Benoot,cobbles,81
+Laurence Pithie,cobbles,81
+Alberto Bettiol,cobbles,80
+Oier Lazkano,cobbles,80
+Tim van Dijke,cobbles,80
+Kasper Asgreen,cobbles,80
+Stan Dewulf,cobbles,79
+Gianni Vermeersch,cobbles,79
+Mike Teunissen,cobbles,79
+Alexander Kristoff,cobbles,78
+Jonas Rutsch,cobbles,78
+Filippo Baroncini,cobbles,79
+Tom Pidcock,puncheur,83
+Ben Healy,puncheur,84
+Julian Alaphilippe,puncheur,81
+Marc Hirschi,puncheur,82
+Maxim Van Gils,puncheur,82
+Romain Grégoire,puncheur,83
+Mauro Schmid,puncheur,81
+Quinn Simmons,puncheur,82
+Michael Matthews,puncheur,82
+Alex Aranburu,puncheur,80
+Andrea Bagioli,puncheur,81
+Benoît Cosnefroy,puncheur,81
+Magnus Cort,puncheur,81
+Thibau Nys,puncheur,83
+Lennert Van Eetvelt,puncheur,81
+Jan Christen,puncheur,80
+Tim Wellens,puncheur,82
+Toms Skujiņš,puncheur,81
+Mattias Skjelmose,puncheur,83
+Neilson Powless,puncheur,82
+Jhonatan Narváez,puncheur,83
+Kévin Vauquelin,puncheur,82
+Victor Lafay,puncheur,80
+Diego Ulissi,puncheur,79
+Warren Barguil,puncheur,79
+Jonas Abrahamsen,puncheur,80
+Axel Zingle,puncheur,79
+Valentin Madouas,puncheur,80
+Tom Pidcock,puncheur,83
+Clément Champoussin,puncheur,79
+Rui Costa,puncheur,78
+Jan Tratnik,rouleur,79
+Victor Campenaerts,rouleur,79
+Nathan Van Hooydonck,rouleur,78
+Felix Großschartner,climber,79
+Domen Novak,climber,78
+Ivo Oliveira,rouleur,77
+Tim Declercq,rouleur,76
+Jonathan Castroviejo,tt,76
