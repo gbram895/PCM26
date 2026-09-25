@@ -603,6 +603,7 @@ PCM.Game = (function () {
     const G = JSON.parse(str);
     if (!G || !G.teams || !G.riders) throw new Error('Not a valid save file');
     R.setState(G.rng || 1);
+    for (const id in G.riders) Riders.ensureAttrs(G.riders[id]);
     Riders.setNextId(G.nextId || (Math.max(0, ...Object.keys(G.riders).map(Number)) + 1));
     return G;
   }

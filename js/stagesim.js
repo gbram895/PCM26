@@ -55,10 +55,10 @@ PCM.StageSim = (function () {
   function abil(a, seg) {
     switch (seg.terr) {
       case 'flat': return a.fl * 0.75 + a.st * 0.25;
-      case 'rolling': return a.hi * 0.6 + a.fl * 0.2 + a.mo * 0.2;
-      case 'climb': return seg.grade >= 6 ? a.mo * 0.85 + a.re * 0.15 : a.mo * 0.55 + a.hi * 0.45;
+      case 'rolling': return a.hi * 0.6 + a.mm * 0.25 + a.fl * 0.15;
+      case 'climb': return seg.grade >= 6 ? a.mo * 0.85 + a.re * 0.15 : a.mm * 0.75 + a.hi * 0.25;
       case 'cobbles': return seg.grade > 3 ? a.co * 0.6 + a.hi * 0.4 : a.co * 0.75 + a.fl * 0.25;
-      default: return a.fl * 0.5 + a.mo * 0.5;
+      default: return a.dh * 0.7 + a.fl * 0.3;
     }
   }
 
@@ -115,7 +115,7 @@ PCM.StageSim = (function () {
   function attack(sim, rid) {
     const x = sim.byRid.get(rid);
     if (!x || x.out || x.burst > 0 || x.cooldown > 0 || x.energy < 8) return false;
-    x.burst = 5.5;
+    x.burst = 4.5 + (x.r.a.acc - 70) * 0.05; // acceleration decides how hard the jump is
     x.cooldown = 6;
     x.act = 'attack';
     return true;
@@ -318,6 +318,7 @@ PCM.StageSim = (function () {
       for (const x of g.riders) {
         const tact = sim.tactics[x.teamId];
         let v = abil(x.r.a, seg) + x.adj + x.burst + x.support + (tact === 'agg' ? 0.3 : tact === 'cons' ? -0.2 : 0);
+        if (g !== pel && g.riders.length <= 15 && pel && g.t < pel.t) v += (x.r.a.brk - 70) * 0.06; // breakaway specialists
         if (x.energy < 35) v -= x.energy <= 0 ? 10 : (35 - x.energy) * 0.28;
         x.eff = v + R.normal(0, 0.5);
       }
@@ -388,7 +389,7 @@ PCM.StageSim = (function () {
         else m = seg.terr === 'flat' || seg.terr === 'descent' ? 0.75 : 1;
         if (x.eff < g.pace - TOL[seg.terr] * 0.5) m *= 1.2;
         const before = x.energy;
-        x.energy = Math.max(0, x.energy - d * m * (1.3 - x.r.a.st / 100));
+        x.energy = Math.max(0, x.energy - d * m * (1.3 - (x.r.a.st * 0.7 + x.r.a.res * 0.3) / 100));
         if (before >= 10 && x.energy < 10 && notable(sim, x)) event(sim, 'empty', [x.rid]);
       }
     }

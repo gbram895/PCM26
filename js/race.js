@@ -128,20 +128,20 @@ PCM.Race = (function () {
   function raceAbility(a, stage) {
     switch (stage.type) {
       case 'flat': return stage.lateClimbs ? a.fl * 0.35 + a.st * 0.3 + a.hi * 0.2 + a.sp * 0.15 : a.fl * 0.55 + a.st * 0.25 + a.sp * 0.2;
-      case 'hilly': return a.hi * 0.65 + a.st * 0.15 + a.mo * 0.2;
-      case 'mountain': return a.mo * 0.72 + a.st * 0.13 + a.re * 0.15;
-      case 'itt': return a.tt * 0.85 + a.fl * 0.15;
-      case 'cobbles': return a.co * 0.62 + a.fl * 0.18 + a.st * 0.2;
+      case 'hilly': return a.hi * 0.5 + a.mm * 0.2 + a.st * 0.15 + a.mo * 0.15;
+      case 'mountain': return a.mo * 0.65 + a.mm * 0.07 + a.st * 0.13 + a.re * 0.15;
+      case 'itt': return stage.km <= 16 ? a.prl * 0.75 + a.tt * 0.15 + a.fl * 0.1 : a.tt * 0.85 + a.fl * 0.15;
+      case 'cobbles': return a.co * 0.62 + a.fl * 0.18 + a.st * 0.1 + a.res * 0.1;
     }
     return 50;
   }
   function finishAbility(a, stage) {
     switch (stage.type) {
-      case 'flat': return a.sp * 0.85 + a.fl * 0.15;
-      case 'hilly': return a.hi * 0.55 + a.sp * 0.45;
-      case 'mountain': return stage.summit ? raceAbility(a, stage) : a.mo * 0.5 + a.hi * 0.3 + a.sp * 0.2;
+      case 'flat': return a.sp * 0.7 + a.acc * 0.15 + a.fl * 0.15;
+      case 'hilly': return a.hi * 0.45 + a.sp * 0.3 + a.acc * 0.25;
+      case 'mountain': return stage.summit ? raceAbility(a, stage) : a.mo * 0.35 + a.mm * 0.15 + a.dh * 0.15 + a.hi * 0.15 + a.acc * 0.2;
       case 'itt': return raceAbility(a, stage);
-      case 'cobbles': return a.co * 0.45 + a.sp * 0.55;
+      case 'cobbles': return a.co * 0.45 + a.sp * 0.35 + a.acc * 0.2;
     }
     return 50;
   }

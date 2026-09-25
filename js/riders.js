@@ -8,13 +8,13 @@ PCM.Riders = (function () {
   // Specialty scores (what the rider is good at)
   function specScores(a) {
     return {
-      gc: a.mo * 0.55 + a.tt * 0.2 + a.re * 0.15 + a.st * 0.1,
-      climber: a.mo * 0.75 + a.st * 0.1 + a.re * 0.15,
-      sprinter: a.sp * 0.75 + a.fl * 0.2 + a.st * 0.05,
-      puncheur: a.hi * 0.75 + a.sp * 0.1 + a.st * 0.15,
-      cobbles: a.co * 0.65 + a.fl * 0.2 + a.st * 0.15,
-      tt: a.tt * 0.85 + a.fl * 0.15,
-      rouleur: a.fl * 0.55 + a.st * 0.25 + a.re * 0.2 - 4,
+      gc: a.mo * 0.45 + a.mm * 0.1 + a.tt * 0.2 + a.res * 0.1 + a.re * 0.1 + a.st * 0.05,
+      climber: a.mo * 0.65 + a.mm * 0.15 + a.st * 0.05 + a.re * 0.15,
+      sprinter: a.sp * 0.6 + a.acc * 0.2 + a.fl * 0.15 + a.st * 0.05,
+      puncheur: a.hi * 0.6 + a.acc * 0.15 + a.mm * 0.1 + a.st * 0.15,
+      cobbles: a.co * 0.6 + a.fl * 0.2 + a.st * 0.1 + a.res * 0.1,
+      tt: a.tt * 0.75 + a.prl * 0.1 + a.fl * 0.15,
+      rouleur: a.fl * 0.5 + a.st * 0.2 + a.res * 0.15 + a.brk * 0.15 - 4,
     };
   }
 
@@ -24,6 +24,8 @@ PCM.Riders = (function () {
     for (const k in s) if (s[k] > bv) { bv = s[k]; best = k; }
     // climbers who can also time trial are GC riders
     if (best === 'climber' && s.gc >= s.climber - 1.5) best = 'gc';
+    // keep the rider's own profile when it's nearly as strong as the best one
+    if (r.type && s[r.type] !== undefined && s[r.type] >= bv - 1.5) best = r.type;
     return best;
   }
 
@@ -155,9 +157,23 @@ PCM.Riders = (function () {
     return ovr(r) - before;
   }
 
+  // older saves only had 8 attributes: derive the PCM extras from them
+  function ensureAttrs(r) {
+    const a = r.a;
+    if (a.mm !== undefined) return false;
+    const j = k => ((r.id * 7919 + k * 104729) % 7) - 3; // small fixed per-rider variation
+    a.mm = U.clamp((a.mo + a.hi) / 2 + j(1) * 0.5, 35, 95);
+    a.prl = U.clamp(a.tt + j(2) * 0.6, 35, 95);
+    a.acc = U.clamp(a.sp - 2 + j(3) * 0.8, 35, 95);
+    a.dh = U.clamp((a.fl + a.mo) / 2 + j(4), 35, 95);
+    a.res = U.clamp(a.st + j(5) * 0.7, 35, 95);
+    a.brk = U.clamp((a.fl + a.st) / 2 - 3 + j(6), 35, 95);
+    return true;
+  }
+
   function fullName(r) { return r.first + ' ' + r.last; }
   function shortName(r) { return r.first[0] + '. ' + r.last; }
 
   return { specScores, specialty, ovr, age, salaryAsk, transferValue, create, createYouth, trainWeek, ageAndDevelop,
-    fullName, shortName, blankSeason, defaultFocus, setNextId, getNextId, ATTR_KEYS };
+    fullName, shortName, blankSeason, ensureAttrs, defaultFocus, setNextId, getNextId, ATTR_KEYS };
 })();

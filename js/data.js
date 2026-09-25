@@ -180,15 +180,22 @@ PCM.DATA = (function () {
     'Rivabella', 'Soleil', 'Tourmalet Nord', 'Urbasa', 'Vallon', 'Zanetta', 'Belvedere', 'Crestaz', 'Doncières', 'Enchastray',
     'Ferriere', 'Grosseto', 'Hautacam Sud', 'Irati', 'Joux Plane Est', 'Kruisberg', 'Lagos', 'Madeleine Petite', 'Navacerrada Alta', 'Oude Kwaremont'];
 
+  // PCM-style attributes
   const ATTRS = [
-    { k: 'fl', label: 'Flat', long: 'Flat' },
-    { k: 'mo', label: 'MTN', long: 'Mountain' },
+    { k: 'fl', label: 'FL', long: 'Flat' },
+    { k: 'mo', label: 'MO', long: 'Mountain' },
+    { k: 'mm', label: 'MM', long: 'Medium mountain' },
     { k: 'hi', label: 'HIL', long: 'Hills' },
     { k: 'tt', label: 'TT', long: 'Time trial' },
-    { k: 'sp', label: 'SPR', long: 'Sprint' },
+    { k: 'prl', label: 'PRL', long: 'Prologue' },
     { k: 'co', label: 'COB', long: 'Cobbles' },
-    { k: 'st', label: 'STA', long: 'Stamina' },
+    { k: 'sp', label: 'SPR', long: 'Sprint' },
+    { k: 'acc', label: 'ACC', long: 'Acceleration' },
+    { k: 'dh', label: 'DH', long: 'Downhill' },
+    { k: 'st', label: 'END', long: 'Endurance (stamina)' },
+    { k: 'res', label: 'RES', long: 'Resistance' },
     { k: 're', label: 'REC', long: 'Recovery' },
+    { k: 'brk', label: 'BRK', long: 'Breakaway' },
   ];
 
   const SPECIALTIES = {
@@ -203,23 +210,25 @@ PCM.DATA = (function () {
 
   // offsets added to a base quality for each rider type
   const TEMPLATES = {
-    gc: { fl: 0, mo: 5, hi: 2, tt: 3, sp: -12, co: -9, st: 4, re: 5 },
-    climber: { fl: -3, mo: 6, hi: 2, tt: -5, sp: -12, co: -12, st: 3, re: 3 },
-    sprinter: { fl: 3, mo: -14, hi: -6, tt: -6, sp: 8, co: -2, st: -2, re: 0 },
-    puncheur: { fl: 0, mo: -3, hi: 6, tt: -4, sp: 1, co: -2, st: 0, re: 0 },
-    cobbles: { fl: 4, mo: -12, hi: 1, tt: 0, sp: -1, co: 7, st: 2, re: 0 },
-    tt: { fl: 4, mo: -5, hi: -3, tt: 7, sp: -6, co: -2, st: 1, re: 1 },
-    rouleur: { fl: 4, mo: -3, hi: -2, tt: 0, sp: -5, co: 0, st: 3, re: 2 },
+    gc: { fl: 0, mo: 5, mm: 4, hi: 2, tt: 3, prl: 1, sp: -12, acc: -6, co: -9, dh: 2, st: 4, res: 4, re: 5, brk: -4 },
+    climber: { fl: -3, mo: 6, mm: 5, hi: 2, tt: -5, prl: -4, sp: -12, acc: -5, co: -12, dh: 1, st: 3, res: 2, re: 3, brk: 0 },
+    sprinter: { fl: 3, mo: -14, mm: -10, hi: -6, tt: -6, prl: 0, sp: 8, acc: 8, co: -2, dh: 0, st: -2, res: -2, re: 0, brk: -4 },
+    puncheur: { fl: 0, mo: -3, mm: 3, hi: 6, tt: -4, prl: -1, sp: 1, acc: 5, co: -2, dh: 1, st: 0, res: 0, re: 0, brk: 1 },
+    cobbles: { fl: 4, mo: -12, mm: -6, hi: 1, tt: 0, prl: 0, sp: -1, acc: 0, co: 7, dh: 1, st: 2, res: 3, re: 0, brk: 2 },
+    tt: { fl: 4, mo: -5, mm: -3, hi: -3, tt: 7, prl: 7, sp: -6, acc: -4, co: -2, dh: 1, st: 1, res: 2, re: 1, brk: 2 },
+    rouleur: { fl: 4, mo: -3, mm: -2, hi: -2, tt: 0, prl: -1, sp: -5, acc: -4, co: 0, dh: 0, st: 3, res: 3, re: 2, brk: 4 },
   };
 
   const TRAINING_FOCUS = {
-    balanced: { label: 'Balanced', attrs: ['fl', 'mo', 'hi', 'tt', 'sp', 'co', 'st', 're'] },
-    mountain: { label: 'Climbing', attrs: ['mo', 'st', 're'] },
-    hills: { label: 'Hills', attrs: ['hi', 'mo', 'sp'] },
-    tt: { label: 'Time trial', attrs: ['tt', 'fl'] },
-    sprint: { label: 'Sprint', attrs: ['sp', 'fl'] },
-    cobbles: { label: 'Cobbles', attrs: ['co', 'fl', 'st'] },
-    endurance: { label: 'Endurance', attrs: ['st', 're', 'fl'] },
+    balanced: { label: 'Balanced', attrs: ['fl', 'mo', 'mm', 'hi', 'tt', 'prl', 'co', 'sp', 'acc', 'dh', 'st', 'res', 're', 'brk'] },
+    mountain: { label: 'Climbing', attrs: ['mo', 'mm', 'st', 're'] },
+    hills: { label: 'Hills', attrs: ['hi', 'mm', 'acc'] },
+    tt: { label: 'Time trial', attrs: ['tt', 'prl', 'fl'] },
+    sprint: { label: 'Sprint', attrs: ['sp', 'acc', 'fl'] },
+    cobbles: { label: 'Cobbles', attrs: ['co', 'fl', 'res'] },
+    endurance: { label: 'Endurance', attrs: ['st', 'res', 're'] },
+    breakaway: { label: 'Breakaway', attrs: ['brk', 'fl', 'st'] },
+    descending: { label: 'Descending', attrs: ['dh', 'mm'] },
   };
   const TRAINING_LOAD = {
     rest: { label: 'Rest', form: 48, growth: 0, fatigue: 1.5 },
