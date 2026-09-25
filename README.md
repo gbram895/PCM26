@@ -29,7 +29,8 @@ npm run build:real:wiki   # or download full rosters from Wikipedia (needs acces
 
 This writes `js/data-real.js` (ignored by git). The **Real peloton** option then appears on the new-game screen and becomes the default.
 
-- `tools/real/rosters-2026.txt` holds the 18 WorldTeams and 16 ProTeams (about 900 riders) from Wikipedia (CC BY-SA 4.0), with nationality, birth year and rider type. Edit it to add mid-season transfers, then rebuild.
+- `tools/real/rosters-2026.txt` holds the 18 WorldTeams, 16 ProTeams and 14 Continental teams (about 1,080 riders) from Wikipedia (CC BY-SA 4.0), with nationality, birth year and rider type. Edit it to add mid-season transfers, then rebuild.
+- Continental teams don't ride WorldTour races and can't be managed; they're a pool of young talent on the transfer market (filter by **Team level**). Only Continental teams whose Wikipedia squad was updated for the season are included, since most of those articles are years out of date.
 - ProTeams only ride races they're invited to. The top three ProTeams (Cofidis, Pinarello–Q36.5 and Tudor in 2026, then the best three by points each season) are invited everywhere; the rest get wildcards that favour races in their home country.
 - Ratings are estimates. About 200 riders are hand-rated in `tools/real/ratings.csv`; the rest are estimated. Edit the CSV and rebuild to change them.
 - Race routes and climb names are generated, not the real courses.

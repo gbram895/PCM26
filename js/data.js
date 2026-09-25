@@ -130,7 +130,7 @@ PCM.DATA = (function () {
 
   // IOC code -> [country name, ISO 3166 alpha-2] for flags of real riders from any nation
   const NAT_INFO = {
-    UAE: ['United Arab Emirates', 'AE'], BRN: ['Bahrain', 'BH'], ALB: ['Albania', 'AL'], ALG: ['Algeria', 'DZ'], AND: ['Andorra', 'AD'], ARG: ['Argentina', 'AR'], AUS: ['Australia', 'AU'], AUT: ['Austria', 'AT'],
+    UAE: ['United Arab Emirates', 'AE'], BRN: ['Bahrain', 'BH'], MAS: ['Malaysia', 'MY'], PHI: ['Philippines', 'PH'], GUM: ['Guam', 'GU'], INA: ['Indonesia', 'ID'], IRI: ['Iran', 'IR'], HKG: ['Hong Kong', 'HK'], TPE: ['Taiwan', 'TW'], VIE: ['Vietnam', 'VN'], MGL: ['Mongolia', 'MN'], SGP: ['Singapore', 'SG'], TUN: ['Tunisia', 'TN'], UGA: ['Uganda', 'UG'], ISL: ['Iceland', 'IS'], CYP: ['Cyprus', 'CY'], BIH: ['Bosnia and Herzegovina', 'BA'], MKD: ['North Macedonia', 'MK'], MNE: ['Montenegro', 'ME'], BOL: ['Bolivia', 'BO'], PER: ['Peru', 'PE'], GUA: ['Guatemala', 'GT'], DOM: ['Dominican Republic', 'DO'], CUB: ['Cuba', 'CU'], ALB: ['Albania', 'AL'], ALG: ['Algeria', 'DZ'], AND: ['Andorra', 'AD'], ARG: ['Argentina', 'AR'], AUS: ['Australia', 'AU'], AUT: ['Austria', 'AT'],
     AZE: ['Azerbaijan', 'AZ'], BEL: ['Belgium', 'BE'], BLR: ['Belarus', 'BY'], BRA: ['Brazil', 'BR'], BUL: ['Bulgaria', 'BG'], CAN: ['Canada', 'CA'],
     CHI: ['Chile', 'CL'], CHN: ['China', 'CN'], COL: ['Colombia', 'CO'], CRC: ['Costa Rica', 'CR'], CRO: ['Croatia', 'HR'], CZE: ['Czech Republic', 'CZ'],
     DEN: ['Denmark', 'DK'], ECU: ['Ecuador', 'EC'], ERI: ['Eritrea', 'ER'], ESP: ['Spain', 'ES'], EST: ['Estonia', 'EE'], ETH: ['Ethiopia', 'ET'],

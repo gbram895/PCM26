@@ -96,8 +96,8 @@ PCM.Game = (function () {
       const r = realRider(G, rd);
       signTo(G, r, team, Riders.salaryAsk(r, G.year) * R.range(0.85, 1.15), G.year + R.int(0, 2));
     }
-    // top up thin rosters with fictional neo-pros
-    while (team.riders.length < 24) {
+    // top up thin rosters with fictional neo-pros (Continental squads are small by design)
+    while (team.riders.length < (team.tier === 'CT' ? 8 : 24)) {
       const r = Riders.createYouth(G.year, team.nat, 66 + team.prestige * 2.5 + R.normal(0, 3));
       signTo(G, r, team, Riders.salaryAsk(r, G.year), G.year + R.int(1, 2));
     }
@@ -116,7 +116,7 @@ PCM.Game = (function () {
   function assignInvites(G, cal) {
     const pros = proTeams(G);
     if (!pros.length) return;
-    const wt = Object.values(G.teams).filter(t => t.tier !== 'PRO').map(t => t.id);
+    const wt = Object.values(G.teams).filter(t => (t.tier || 'WT') === 'WT').map(t => t.id);
     const auto = (G.autoInvites || []).filter(id => G.teams[id]);
     const rest = pros.filter(t => !auto.includes(t.id));
     for (const race of cal) {
@@ -192,8 +192,9 @@ PCM.Game = (function () {
     if (G.ledger.length > 300) G.ledger.length = 300;
   }
 
+  // Continental teams don't ride WorldTour races, so they're left out of the team ranking
   function teamRanking(G) {
-    return Object.values(G.teams).sort((a, b) => b.season.pts - a.season.pts || b.season.wins - a.season.wins);
+    return Object.values(G.teams).filter(t => t.tier !== 'CT').sort((a, b) => b.season.pts - a.season.pts || b.season.wins - a.season.wins);
   }
   function riderRanking(G) {
     return Object.values(G.riders).filter(r => r.season.pts > 0).sort((a, b) => b.season.pts - a.season.pts);
@@ -304,7 +305,8 @@ PCM.Game = (function () {
     for (const id in G.teams) {
       if (id === G.playerTeamId) continue;
       const t = G.teams[id];
-      if (t.riders.length < 22) aiFill(G, t, 23);
+      if (t.tier === 'CT') { if (t.riders.length < 8) aiFill(G, t, 10); }
+      else if (t.riders.length < 22) aiFill(G, t, 23);
     }
     randomEvents(G);
     G.week++;
@@ -440,9 +442,9 @@ PCM.Game = (function () {
     const a = Riders.age(r, G.year);
     return Riders.ovr(r) + (a <= 23 ? (r.pot - Riders.ovr(r)) * 0.5 : 0) - (a >= 33 ? 3 : 0);
   }
-  function aiFill(G, team, target) {
+  function aiFill(G, team, target, youthOnly) {
     let budget = team.sponsor * 0.8 - payroll(G, team) + Math.max(0, team.cash) * 0.3;
-    const pool = G.freeAgents.map(id => G.riders[id]).sort((a, b) => aiValue(G, b) - aiValue(G, a));
+    const pool = G.freeAgents.map(id => G.riders[id]).filter(r => !youthOnly || Riders.age(r, G.year) <= 23).sort((a, b) => aiValue(G, b) - aiValue(G, a));
     for (const r of pool) {
       if (team.riders.length >= target) break;
       const sal = Riders.salaryAsk(r, G.year);
@@ -531,8 +533,10 @@ PCM.Game = (function () {
     G.freeAgents = fas.slice(0, 90).map(r => r.id);
     addFreeAgents(G, 42, 10);
     // AI roster building, stronger teams pick first
-    const order = Object.values(G.teams).filter(x => x.id !== t.id).sort((a, b) => b.sponsor - a.sponsor);
+    const order = Object.values(G.teams).filter(x => x.id !== t.id && x.tier !== 'CT').sort((a, b) => b.sponsor - a.sponsor);
     for (let pass = 0; pass < 3; pass++) for (const team of order) aiFill(G, team, 24 + pass);
+    // Continental teams take on young riders
+    for (const team of Object.values(G.teams).filter(x => x.id !== t.id && x.tier === 'CT')) aiFill(G, team, 12, true);
     for (const team of order) {
       while (team.riders.length > MAX_ROSTER) {
         const worst = U.maxBy(team.riders.map(i => G.riders[i]), r => -aiValue(G, r));
@@ -570,7 +574,7 @@ PCM.Game = (function () {
 
   function jobOffers(G) {
     const cur = player(G);
-    return Object.values(G.teams).filter(t => t.id !== cur.id && t.prestige <= Math.max(1, cur.prestige - 1)).sort((a, b) => b.prestige - a.prestige);
+    return Object.values(G.teams).filter(t => t.id !== cur.id && t.tier !== 'CT' && t.prestige <= Math.max(1, cur.prestige - 1)).sort((a, b) => b.prestige - a.prestige);
   }
   function takeJob(G, teamId) {
     G.playerTeamId = teamId;

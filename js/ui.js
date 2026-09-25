@@ -11,7 +11,7 @@ PCM.UI = (function () {
   let toastTimer = null;
   const S = {
     view: 'dashboard', squadSort: { k: 'ovr', d: -1 }, mktSort: { k: 'ovr', d: -1 },
-    mkt: { q: '', spec: '', maxAge: '', minOvr: '', maxSal: '', fa: false },
+    mkt: { q: '', spec: '', maxAge: '', minOvr: '', maxSal: '', fa: false, tier: '' },
     raceTab: 'stage', stageView: null, sel: null, tactic: 'bal', live: null, modal: null, standTab: 'teams',
     newTeam: null, world: PCM.REAL ? 'real' : 'fictional', slots: null, saveStatus: '', confirmDel: null, toast: '', io: '', ioMsg: '',
   };
@@ -244,7 +244,8 @@ PCM.UI = (function () {
         <button class="btn sm ${real ? '' : 'primary'}" data-act="world" data-w="fictional">Fictional world</button>
         <button class="btn sm ${real ? 'primary' : ''}" data-act="world" data-w="real" ${Game.realAvailable() ? '' : 'disabled'}>Real peloton ${Game.realAvailable() ? PCM.REAL.season : ''}</button>
         <span class="small muted">${Game.realAvailable() ? (real ? `Real riders and races. ${PCM.REAL.teams.reduce((n, t) => n + t.riders.length, 0)} riders from ${h(PCM.REAL.source || 'public data')}; ratings are estimates.` : 'Generated riders, teams and races.') : 'Real peloton not installed: run <code>npm run build:real</code>.'}</span></div>`;
-    const defs = Game.teamDefs(real ? 'real' : 'fictional');
+    // Continental teams ride no WorldTour races, so they can't be picked; their riders are on the transfer market
+    const defs = Game.teamDefs(real ? 'real' : 'fictional').filter(t => t.tier !== 'CT');
     const card = t => `<button class="teamcard ${S.newTeam === t.id ? 'on' : ''}" data-act="pickteam" data-id="${t.id}">
         <div class="kit" style="background:linear-gradient(90deg, ${t.c1} 70%, ${t.c2} 70%)"></div>
         <h3>${h(t.name)}</h3>
@@ -633,6 +634,7 @@ PCM.UI = (function () {
     const f = S.mkt;
     let list = Object.values(G.riders).filter(r => r.teamId !== G.playerTeamId);
     if (f.fa) list = list.filter(r => !r.teamId);
+    if (f.tier) list = list.filter(r => r.teamId && (G.teams[r.teamId].tier || 'WT') === f.tier);
     if (f.spec) list = list.filter(r => Riders.specialty(r) === f.spec);
     if (f.maxAge) list = list.filter(r => age(r) <= +f.maxAge);
     if (f.minOvr) list = list.filter(r => Riders.ovr(r) >= +f.minOvr);
@@ -652,6 +654,7 @@ PCM.UI = (function () {
         <div class="row">
           <div class="field"><label class="label" for="mq">Name</label><input type="text" id="mq" data-change="mkt" data-k="q" value="${h(f.q)}" placeholder="Search"></div>
           <div class="field"><label class="label" for="ms">Type</label><select id="ms" data-change="mkt" data-k="spec"><option value="">Any</option>${Object.entries(DATA.SPECIALTIES).map(([k, v]) => `<option value="${k}" ${f.spec === k ? 'selected' : ''}>${v.long}</option>`).join('')}</select></div>
+          ${Object.values(G.teams).some(t => t.tier === 'CT' || t.tier === 'PRO') ? `<div class="field"><label class="label" for="mt">Team level</label><select id="mt" data-change="mkt" data-k="tier"><option value="">Any</option>${[['WT', 'WorldTeams'], ['PRO', 'ProTeams'], ['CT', 'Continental']].map(([k, l]) => `<option value="${k}" ${f.tier === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>` : ''}
           <div class="field"><label class="label" for="ma">Max age</label><input type="number" id="ma" data-change="mkt" data-k="maxAge" value="${h(f.maxAge)}" min="18" max="40" style="width:80px"></div>
           <div class="field"><label class="label" for="mo">Min OVR</label><input type="number" id="mo" data-change="mkt" data-k="minOvr" value="${h(f.minOvr)}" min="40" max="90" style="width:80px"></div>
           <div class="field"><label class="label" for="mx">Max salary (k€)</label><input type="number" id="mx" data-change="mkt" data-k="maxSal" value="${h(f.maxSal)}" min="0" step="50" style="width:110px"></div>
