@@ -23,13 +23,13 @@ You don't need to do anything: the game saves after every action and reopens str
 The game also has a real world: the 18 WorldTeams of 2026 with real race names. Build its roster with:
 
 ```sh
-npm run build:real        # from tools/real/rosters-2026.txt (hand-written, no internet needed)
+npm run build:real        # from tools/real/rosters-2026.txt (no internet needed)
 npm run build:real:wiki   # or download full rosters from Wikipedia (needs access to en.wikipedia.org)
 ```
 
 This writes `js/data-real.js` (ignored by git). The **Real peloton** option then appears on the new-game screen and becomes the default.
 
-- `tools/real/rosters-2026.txt` lists about 300 riders written from memory. Lesser-known riders and late transfers may be out of date: edit the file and rebuild. Squads with fewer than 24 riders are topped up with fictional neo-pros.
+- `tools/real/rosters-2026.txt` holds all 521 riders of the 18 WorldTeams, taken from Wikipedia's *List of 2026 UCI WorldTeams and riders* (CC BY-SA 4.0), with nationality, birth year and rider type. Edit it to add mid-season transfers, then rebuild.
 - Ratings are estimates. About 200 riders are hand-rated in `tools/real/ratings.csv`; the rest are estimated. Edit the CSV and rebuild to change them.
 - Race routes and climb names are generated, not the real courses.
 

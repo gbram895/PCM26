@@ -35,17 +35,22 @@ async function api(params) {
   const file = path.join(CACHE, crypto.createHash('sha1').update(qs).digest('hex') + '.json');
   if (!REFRESH && fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
   if (OFFLINE) return null;
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < 8; attempt++) {
     try {
-      const res = await fetch(API + '?' + qs, { headers: { 'User-Agent': UA, 'Accept': 'application/json' } });
-      if (res.status === 429 || res.status >= 500) throw new Error('HTTP ' + res.status);
+      const res = await fetch(API + '?' + qs, { headers: { 'User-Agent': UA, 'Api-User-Agent': UA, 'Accept': 'application/json' } });
+      if (res.status === 429 || res.status >= 500) {
+        const wait = Math.min(120, +res.headers.get('retry-after') || 30);
+        process.stdout.write(`\n  Wikipedia asked us to slow down; waiting ${wait}s…`);
+        await sleep(wait * 1000);
+        throw new Error('HTTP ' + res.status);
+      }
       const j = await res.json();
       fs.mkdirSync(CACHE, { recursive: true });
       fs.writeFileSync(file, JSON.stringify(j));
-      await sleep(150);
+      await sleep(1100); // stay well under anonymous API limits
       return j;
     } catch (e) {
-      if (attempt === 3) throw new Error(`Wikipedia request failed (${e.message}). Is en.wikipedia.org reachable?`);
+      if (attempt === 7) throw new Error(`Wikipedia request failed (${e.message}). Is en.wikipedia.org reachable?`);
       await sleep(1000 * 2 ** attempt);
     }
   }
@@ -130,6 +135,25 @@ function parseRoster(text) {
   return riders.filter(r => (seen.has(r.title) ? false : seen.add(r.title)));
 }
 
+// "List of <season> UCI WorldTeams and riders": one section per team with
+// {{Cycling squad rider|name=[[Page|Name]]|nat=XXX|birthdate={{birth date and age2|...|ref Y|M|D|birth Y|M|D}}}}
+function parseTeamList(text) {
+  const teams = [];
+  let cur = null;
+  for (const line of text.split('\n')) {
+    const h = /^===\s*(.+?)\s*===\s*$/.exec(line);
+    if (h) { cur = { name: h[1].replace(/\[\[|\]\]/g, ''), roster: [] }; teams.push(cur); continue; }
+    if (!cur || !/Cycling squad rider/i.test(line)) continue;
+    const link = /name\s*=\s*\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/.exec(line);
+    if (!link) continue;
+    const nat = (/\|\s*nat\s*=\s*([A-Z]{3})/.exec(line) || [])[1] || null;
+    const nums = ((/birth date(?: and age2?)?\s*\|([^}]*)\}\}/i.exec(line) || [])[1] || '').split('|').map(x => x.trim()).filter(x => /^\d+$/.test(x));
+    const born = nums.length >= 3 ? `${nums[nums.length - 3]}-${nums[nums.length - 2].padStart(2, '0')}-${nums[nums.length - 1].padStart(2, '0')}` : null;
+    cur.roster.push({ title: link[1].trim(), display: (link[2] || link[1]).replace(/\s*\(.*\)\s*$/, '').trim(), nat, born });
+  }
+  return teams.filter(t => t.roster.length >= 10);
+}
+
 function infoboxField(text, key) {
   const re = new RegExp('^\\s*\\|\\s*' + key + '\\s*=([\\s\\S]*?)(?=^\\s*\\|\\s*[a-z_0-9]+\\s*=|^\\}\\})', 'mi');
   const m = re.exec(text);
@@ -168,6 +192,19 @@ function estimateLevel(name, age, wins) {
   const ageAdj = age <= 20 ? -4 : age <= 22 ? -2.5 : age <= 24 ? -1 : age <= 31 ? 1 : age <= 34 ? 0 : -1.5;
   const winAdj = Math.min(9, 3 * Math.log2(1 + wins));
   return Math.max(62, Math.min(86, Math.round((69 + ageAdj + winAdj + (hash(name) - 0.5) * 3) * 10) / 10));
+}
+
+// match "Jefferson Cepeda" to "Jefferson Alveiro Cepeda": exact first, then same first and last name
+function findOverride(overrides, name) {
+  const exact = overrides.get(norm(name));
+  if (exact) return exact;
+  const parts = name.split(/\s+/);
+  if (parts.length < 3) return null;
+  for (const [, ov] of overrides) {
+    const o = ov.name.split(/\s+/);
+    if (norm(o[0]) === norm(parts[0]) && norm(o[o.length - 1]) === norm(parts[parts.length - 1])) return ov;
+  }
+  return null;
 }
 
 function loadOverrides() {
@@ -217,13 +254,13 @@ function teamId(name, used) {
 
 async function teamList() {
   const custom = path.join(__dirname, 'real', 'teams.txt');
-  if (fs.existsSync(custom)) return fs.readFileSync(custom, 'utf8').split('\n').map(x => x.trim()).filter(x => x && !x.startsWith('#'));
-  const page = await wikitext(`${SEASON} UCI World Tour`);
-  if (!page) throw new Error(`Could not load "${SEASON} UCI World Tour" from Wikipedia.`);
-  const sec = sections(page.text).find(s => /^teams$|uci worldteams|participating teams/i.test(s.title)) || sections(page.text).find(s => /team/i.test(s.title));
-  const cands = links(sec ? sec.full : page.text).map(l => l.target)
-    .filter(t => !NAT_BY_NAME[norm(t)] && !/^\d{4}|uci|union|world tour|proteam|continental/i.test(t));
-  return [...new Set(cands)];
+  if (fs.existsSync(custom)) return fs.readFileSync(custom, 'utf8').split('\n').map(x => x.trim()).filter(x => x && !x.startsWith('#')).map(name => ({ name, season: `${SEASON} ${name} season` }));
+  // The Teams section uses {{UCI team code}} templates, so ask for the page's resolved links
+  // and keep the "<season> <team> season" articles (WorldTeams plus invited ProTeams).
+  const j = await api({ action: 'parse', page: `${SEASON} UCI World Tour`, prop: 'links', redirects: '1' });
+  if (!j || !j.parse) throw new Error(`Could not load "${SEASON} UCI World Tour" from Wikipedia.`);
+  const re = new RegExp(`^${SEASON} (.+) season$`);
+  return j.parse.links.filter(l => l.exists !== false && re.test(l.title)).map(l => ({ season: l.title, name: l.title.match(re)[1] }));
 }
 
 // Hand-written roster file (no network needed): "## Team" headers, then "Name | NAT | birth year | type"
@@ -252,7 +289,7 @@ function assemble(rawTeams, overrides) {
   for (const t of rawTeams) {
     const riders = t.riders.map(r => {
       const age = r.born ? SEASON - +r.born.slice(0, 4) : 27;
-      const ov = overrides.get(norm(r.name));
+      const ov = findOverride(overrides, r.name);
       const type = (ov && ov.type) || r.type || 'rouleur';
       const level = ov && ov.level ? ov.level : r.level || seedLevel(r.name, age);
       if (ov) tuned++; else estimated++;
@@ -280,14 +317,16 @@ async function main() {
   if (SEED) {
     const raw = parseSeed(fs.readFileSync(path.resolve(SEED), 'utf8'));
     const { out, tuned, estimated } = assemble(raw, overrides);
-    writeOut(out, 'a hand-written roster list', `${tuned} hand-rated, ${estimated} estimated`);
+    writeOut(out, 'the roster list in tools/real', `${tuned} hand-rated, ${estimated} estimated`);
     return;
   }
-  const teamNames = await teamList();
-  console.log(`Found ${teamNames.length} candidate teams on the ${SEASON} UCI World Tour page.`);
   const teams = [];
-  for (const name of teamNames) {
-    let page = await wikitext(`${SEASON} ${name} season`);
+  const list = await wikitext(`List of ${SEASON} UCI WorldTeams and riders`);
+  if (list) teams.push(...parseTeamList(list.text));
+  if (teams.length) console.log(`Found ${teams.length} teams on "List of ${SEASON} UCI WorldTeams and riders".`);
+  const teamNames = teams.length ? [] : await teamList();
+  for (const { name, season } of teamNames) {
+    let page = await wikitext(season);
     let roster = page ? parseRoster(page.text) : [];
     if (roster.length < 15) {
       const tp = await wikitext(name);
@@ -296,7 +335,6 @@ async function main() {
     }
     if (roster.length < 15) { console.log(`  skip ${name}: no roster found`); continue; }
     teams.push({ name, roster });
-    if (teams.length >= 18 && !fs.existsSync(path.join(__dirname, 'real', 'teams.txt'))) break;
   }
   // rider pages, 50 per request
   const titles = [...new Set(teams.flatMap(t => t.roster.map(r => r.title)))];
@@ -321,22 +359,27 @@ async function main() {
   }
   console.log('');
 
+  if (!teams.length) throw new Error('No team rosters could be read from Wikipedia; js/data-real.js was left unchanged.');
+  // rider types typed by hand in the seed roster fill gaps where Wikipedia has no rider type
+  const seedTypes = new Map();
+  const seedFile = path.join(__dirname, 'real', `rosters-${SEASON}.txt`);
+  if (fs.existsSync(seedFile)) for (const t of parseSeed(fs.readFileSync(seedFile, 'utf8'))) for (const r of t.riders) if (r.type) seedTypes.set(norm(r.name), r.type);
   const used = new Set();
   const out = [];
   let noBirth = 0, estimated = 0, tuned = 0;
   for (const t of teams) {
     const riders = [];
     for (const r of t.roster) {
-      const inf = info.get(r.title);
+      const inf = info.get(r.title) || (r.born ? { born: r.born, ridertype: '', role: '', wins: 0, page: r.title } : null);
       if (!inf) continue;
       if (/directeur|manager|coach|staff|owner/i.test(inf.role) && !/rider/i.test(inf.role)) continue;
-      const display = inf.page.replace(/\s*\(.*\)\s*$/, '');
-      const born = inf.born;
+      const display = r.display || inf.page.replace(/\s*\(.*\)\s*$/, '');
+      const born = r.born || inf.born;
       const age = born ? SEASON - +born.slice(0, 4) : 27;
       if (age > 42 || age < 17) continue;
       if (!born) noBirth++;
-      const ov = overrides.get(norm(display));
-      const type = (ov && ov.type) || typeFrom(inf.ridertype) || 'rouleur';
+      const ov = findOverride(overrides, display);
+      const type = (ov && ov.type) || typeFrom(inf.ridertype) || (seedTypes.get(norm(display))) || 'rouleur';
       const level = ov && ov.level ? ov.level : estimateLevel(display, age, inf.wins);
       if (ov) tuned++; else estimated++;
       const parts = display.split(' ');
@@ -357,5 +400,5 @@ async function main() {
   for (const t of out) console.log(`  ${t.id.padEnd(4)} ${t.name.padEnd(34)} ${String(t.riders.length).padStart(2)} riders  ★${t.prestige}  top: ${t.riders.slice().sort((a, b) => b.level - a.level).slice(0, 3).map(r => r.name).join(', ')}`);
 }
 
-module.exports = { parseSeed, assemble, parseRoster, parseRider, flagCode, typeFrom, estimateLevel, sections, links, loadNations, norm };
+module.exports = { parseTeamList, parseSeed, assemble, parseRoster, parseRider, flagCode, typeFrom, estimateLevel, sections, links, loadNations, norm };
 if (require.main === module) main().catch(e => { console.error('\n' + e.message); process.exit(1); });

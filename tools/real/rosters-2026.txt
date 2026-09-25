@@ -1,338 +1,560 @@
-# Seed roster for the 2026 real peloton, written from memory (knowledge up to mid-2026).
-# Used by: node tools/build-real-db.js --seed tools/real/rosters-2026.txt
-# Format: "## Team name" then one rider per line: Name | NAT (IOC) | birth year | type (optional)
-# Types: gc climber sprinter puncheur cobbles tt rouleur. Ratings come from ratings.csv when listed there.
-# Lesser-known riders and late transfers may be out of date: fix lines freely and rebuild.
-
-## UAE Team Emirates XRG
-Tadej Pogačar | SLO | 1998
-João Almeida | POR | 1998
-Isaac del Toro | MEX | 2003
-Adam Yates | GBR | 1992
-Tim Wellens | BEL | 1991
-Jhonatan Narváez | ECU | 1997
-Marc Soler | ESP | 1993
-Pavel Sivakov | FRA | 1997
-Brandon McNulty | USA | 1998
-Felix Großschartner | AUT | 1993
-Domen Novak | SLO | 1995
-Rafał Majka | POL | 1989
-Nils Politt | GER | 1994
-Florian Vermeersch | BEL | 1999
-Jay Vine | AUS | 1995
-Juan Sebastián Molano | COL | 1994
-Antonio Morgado | POR | 2004 | puncheur
-Jan Christen | SUI | 2004
-Igor Arrieta | ESP | 2002 | climber
-Mikkel Bjerg | DEN | 1998
-Benoît Cosnefroy | FRA | 1995
-Rui Oliveira | POR | 1996 | rouleur
-Ivo Oliveira | POR | 1996
-Vegard Stake Laengen | NOR | 1989 | rouleur
-Pablo Torres | ESP | 2005 | climber
-
-## Team Visma | Lease a Bike
-Jonas Vingegaard | DEN | 1996
-Matteo Jorgenson | USA | 1999
-Wout van Aert | BEL | 1994
-Sepp Kuss | USA | 1994
-Christophe Laporte | FRA | 1992
-Wilco Kelderman | NED | 1991
-Victor Campenaerts | BEL | 1991
-Edoardo Affini | ITA | 1996
-Dylan van Baarle | NED | 1992
-Matthew Brennan | GBR | 2005
-Axel Zingle | FRA | 1998
-Ben Tulett | GBR | 2001 | climber
-Bart Lemmen | NED | 1995 | climber
-Davide Piganzoli | ITA | 2002
-Per Strand Hagenes | NOR | 2003 | puncheur
-Jørgen Nordhagen | NOR | 2005 | climber
-Bruno Armirail | FRA | 1994
-Loe van Belle | NED | 2002 | rouleur
-
-## Red Bull–Bora–Hansgrohe
-Remco Evenepoel | BEL | 2000
-Primož Roglič | SLO | 1989
-Florian Lipowitz | GER | 2000
-Jai Hindley | AUS | 1996
-Aleksandr Vlasov | RUS | 1996
-Daniel Martínez | COL | 1996 | gc
-Giulio Pellizzari | ITA | 2003
-Jordi Meeus | BEL | 1998
-Danny van Poppel | NED | 1993
-Sam Welsford | AUS | 1996
-Nico Denz | GER | 1994 | rouleur
-Matteo Sobrero | ITA | 1997 | tt
-Maxim Van Gils | BEL | 1999
-Tim van Dijke | NED | 2000
-Laurence Pithie | NZL | 2002
-Mattia Cattaneo | ITA | 1990 | tt
-Finn Fisher-Black | NZL | 2001 | puncheur
-Ben Zwiehoff | GER | 1994 | climber
-Mick van Dijke | NED | 2000 | rouleur
-Gianni Moscon | ITA | 1994 | cobbles
-
-## Lidl–Trek
-Mads Pedersen | DEN | 1995
-Jonathan Milan | ITA | 2000
-Juan Ayuso | ESP | 2002
-Giulio Ciccone | ITA | 1994
-Mattias Skjelmose | DEN | 2000
-Tao Geoghegan Hart | GBR | 1995 | gc
-Toms Skujiņš | LAT | 1991
-Quinn Simmons | USA | 2001
-Edward Theuns | BEL | 1991 | sprinter
-Simone Consonni | ITA | 1994 | sprinter
-Daan Hoole | NED | 1999 | tt
-Thibau Nys | BEL | 2002
-Carlos Verona | ESP | 1992 | climber
-Andrea Bagioli | ITA | 1999
-Mathias Vacek | CZE | 2002 | puncheur
-Jacopo Mosca | ITA | 1993 | rouleur
-Albert Withen Philipsen | DEN | 2006 | cobbles
-Derek Gee | CAN | 1997
-Tim Torn Teutenberg | GER | 2002 | sprinter
-
-## INEOS Grenadiers
-Carlos Rodríguez | ESP | 2001
-Egan Bernal | COL | 1997
-Filippo Ganna | ITA | 1996
-Joshua Tarling | GBR | 2004
-Thymen Arensman | NED | 1999
-Magnus Sheffield | USA | 2002
-Tobias Foss | NOR | 1997
-Ben Turner | GBR | 1999 | cobbles
-Michał Kwiatkowski | POL | 1990 | puncheur
-Connor Swift | GBR | 1995 | rouleur
-Kim Heiduk | GER | 2000 | rouleur
-Oscar Onley | GBR | 2002
-Sam Watson | GBR | 2001 | puncheur
-Laurens De Plus | BEL | 1995 | climber
-Axel Laurance | FRA | 2001 | puncheur
-Kévin Vauquelin | FRA | 2001
-Brandon Rivera | COL | 1996 | climber
-Artem Shmidt | USA | 2004 | climber
-
-## Soudal Quick-Step
-Tim Merlier | BEL | 1992
-Paul Magnier | FRA | 2004
-Jasper Stuyven | BEL | 1992
-Ilan Van Wilder | BEL | 2000 | gc
-Mauri Vansevenant | BEL | 1999 | puncheur
-Valentin Paret-Peintre | FRA | 2001 | climber
-Yves Lampaert | BEL | 1991 | cobbles
-Dries Van Gestel | BEL | 1994 | cobbles
-Bert Van Lerberghe | BEL | 1992 | rouleur
-Louis Vervaeke | BEL | 1993 | climber
-Gianmarco Garofoli | ITA | 2002 | climber
-Josef Černý | CZE | 1993 | tt
-Casper Pedersen | DEN | 1996 | rouleur
-Filippo Zana | ITA | 1999 | climber
-Warre Vangheluwe | BEL | 2002 | cobbles
-Ethan Hayter | GBR | 1998
+# 2026 WorldTeam rosters, from English Wikipedia "List of 2026 UCI WorldTeams and riders" (CC BY-SA 4.0), fetched 2026-09-25.
+# Used offline by: npm run build:real. Refresh from Wikipedia with: npm run build:real:wiki
+# Format: "## Team name" then: Name | NAT (IOC) | birth year | type. Types come from Wikipedia rider types or ratings.csv.
 
 ## Alpecin–Premier Tech
-Mathieu van der Poel | NED | 1995
-Jasper Philipsen | BEL | 1998
-Kaden Groves | AUS | 1998
-Søren Kragh Andersen | DEN | 1994 | puncheur
-Gianni Vermeersch | BEL | 1992
-Silvan Dillier | SUI | 1990 | rouleur
+Maurice Ballerstedt | GER | 2001 | rouleur
+Tobias Bayer | AUT | 1999 | rouleur
+Lennert Belmans | BEL | 2002 | rouleur
+Francesco Busatto | ITA | 2002 | rouleur
+Lindsay De Vylder | BEL | 1995 | rouleur
+Ramses Debruyne | BEL | 2002 | rouleur
+Simon Dehairs | BEL | 2001 | sprinter
+Tibor Del Grosso | NED | 2003 | cobbles
+Silvan Dillier | SUI | 1990 | cobbles
+Aaron Dockx | BEL | 2004 | rouleur
+Jonas Geens | BEL | 1999 | rouleur
+Gal Glivar | SLO | 2002 | rouleur
+Michael Gogl | AUT | 1993 | rouleur
+Kaden Groves | AUS | 1998 | sprinter
+Hugo Houle | CAN | 1990 | gc
+Tim Marsman | NED | 2000 | rouleur
+Jasper Philipsen | BEL | 1998 | sprinter
+Edward Planckaert | BEL | 1995 | sprinter
+Jensen Plowright | AUS | 2000 | sprinter
+Johan Price-Pejtersen | DEN | 1999 | tt
+Senna Remijn | NED | 2006 | rouleur
 Jonas Rickaert | BEL | 1994 | rouleur
 Oscar Riesebeek | NED | 1992 | rouleur
-Tibor Del Grosso | NED | 2003 | cobbles
-Quinten Hermans | BEL | 1995 | puncheur
-Xandro Meurisse | BEL | 1992 | puncheur
+Florian Sénéchal | FRA | 1993 | cobbles
+Sente Sentjens | BEL | 2005 | rouleur
+Gerben Thijssen | BEL | 1998 | sprinter
+Henri Uhlig | GER | 2001 | rouleur
+Mathieu van der Poel | NED | 1995 | cobbles
+Luca Vergallito | ITA | 1997 | climber
 Emiel Verstrynge | BEL | 2002 | cobbles
-Timo Kielich | BEL | 1999 | puncheur
-Edward Planckaert | BEL | 1995 | sprinter
+
+## Decathlon–CMA CGM
+Tobias Lund Andresen | DEN | 2002 | sprinter
+Tiesj Benoot | BEL | 1994 | cobbles
+Léo Bisiaux | FRA | 2005 | climber
+Stefan Bissegger | SUI | 1998 | tt
+Cees Bol | NED | 1995 | sprinter
+Oscar Chamberlain | AUS | 2005 | tt
+Sander De Pestel | BEL | 1998 | rouleur
+Stan Dewulf | BEL | 1997 | cobbles
+Felix Gall | AUT | 1998 | gc
+Pierre Gautherat | FRA | 2003 | cobbles
+Robbe Ghys | BEL | 1997 | rouleur
+Tord Gudmestad | NOR | 2001 | rouleur
+Daan Hoole | NED | 1999 | tt
+Noa Isidore | FRA | 2004 | rouleur
+Olav Kooij | NED | 2001 | sprinter
+Antoine L'Hote | FRA | 2005 | puncheur
+Jordan Labrosse | FRA | 2002 | rouleur
+Paul Lapeira | FRA | 2000 | rouleur
+Gregor Mühlberger | AUT | 1994 | climber
+Oliver Naesen | BEL | 1990 | cobbles
+Aurélien Paret-Peintre | FRA | 1996 | climber
+Rasmus Søjberg Pedersen | DEN | 2002 | rouleur
+Gianluca Pollefliet | BEL | 2002 | cobbles
+Nicolas Prodhomme | FRA | 1997 | climber
+Matthew Riccitello | USA | 2002 | climber
+Callum Scotson | AUS | 1996 | rouleur
+Paul Seixas | FRA | 2006 | gc
+Johannes Staune-Mittet | NOR | 2002 | climber
 
 ## EF Education–EasyPost
-Richard Carapaz | ECU | 1993
-Ben Healy | IRL | 2000
-Neilson Powless | USA | 1996
-Kasper Asgreen | DEN | 1995
-Marijn van den Berg | NED | 1999 | sprinter
-Harry Sweeny | AUS | 1998 | rouleur
-Sean Quinn | USA | 2000 | puncheur
-Madis Mihkels | EST | 2003 | sprinter
-Archie Ryan | IRL | 2001 | climber
-Darren Rafferty | IRL | 2003 | climber
+Mattia Agostinacchio | ITA | 2007 | rouleur
+Vincenzo Albanese | ITA | 1996 | gc
+Kasper Asgreen | DEN | 1995 | cobbles
 Samuele Battistella | ITA | 1998 | puncheur
-Jefferson Cepeda | ECU | 1996
+Alex Baudin | FRA | 2001 | climber
+Markel Beloki | ESP | 2005 | rouleur
+Richard Carapaz | ECU | 1993 | gc
+Jefferson Alexander Cepeda | ECU | 1998 | climber
+Ben Healy | IRL | 2000 | puncheur
+Noah Hobbs | GBR | 2004 | sprinter
+Mikkel Frølich Honoré | DEN | 1997 | rouleur
+Luke Lamperti | USA | 2002 | rouleur
+Michael Leonard | CAN | 2004 | rouleur
+Alastair Mackellar | AUS | 2002 | rouleur
+Madis Mihkels | EST | 2003 | sprinter
+Lukas Nerurkar | GBR | 2003 | rouleur
+Neilson Powless | USA | 1996 | puncheur
+Sean Quinn | USA | 2000 | puncheur
+Darren Rafferty | IRL | 2003 | climber
+Archie Ryan | IRL | 2001 | climber
+Matthias Schwarzbacher | SVK | 2005 | cobbles
+James Shaw | GBR | 1996 | puncheur
+Colby Simmons | USA | 2003 | rouleur
 Georg Steinhauser | GER | 2001 | climber
-Vincenzo Albanese | ITA | 1996 | puncheur
-Alex Baudin | FRA | 2001
-Rui Costa | POR | 1986
+Harry Sweeny | AUS | 1998 | rouleur
 Michael Valgren | DEN | 1992 | puncheur
-
-## Decathlon CMA CGM
-Felix Gall | AUT | 1998
-Olav Kooij | NED | 2001
-Paul Seixas | FRA | 2006
-Sam Bennett | IRL | 1990
-Oliver Naesen | BEL | 1990 | cobbles
-Dorian Godon | FRA | 1996 | puncheur
-Stefan Bissegger | SUI | 1998
-Aurélien Paret-Peintre | FRA | 1996 | climber
-Nicolas Prodhomme | FRA | 1997 | climber
-Tiesj Benoot | BEL | 1994
-Matthew Riccitello | USA | 2002 | climber
-Johannes Staune-Mittet | NOR | 2002 | climber
-Callum Scotson | AUS | 1996 | rouleur
-Léo Bisiaux | FRA | 2005 | climber
+Marijn van den Berg | NED | 1999 | sprinter
+Jardi Christiaan van der Lee | NED | 2001 | climber
+Max Walker | GBR | 2001 | rouleur
 
 ## Groupama–FDJ United
-Romain Grégoire | FRA | 2003
-David Gaudu | FRA | 1996
-Valentin Madouas | FRA | 1996
-Guillaume Martin | FRA | 1993
-Quentin Pacher | FRA | 1992 | puncheur
-Kévin Geniets | LUX | 1997 | climber
-Paul Penhoët | FRA | 2001 | sprinter
-Rudy Molard | FRA | 1989 | puncheur
-Lewis Askey | GBR | 2001 | cobbles
-Brieuc Rolland | FRA | 2003 | climber
-Lorenzo Germani | ITA | 2002 | rouleur
+Cyril Barthe | FRA | 1996 | puncheur
+Clément Berthet | FRA | 1997 | rouleur
+Lewis Bower | NZL | 2004 | rouleur
+Clément Braz Afonso | FRA | 1999 | climber
 Rémi Cavagna | FRA | 1995 | tt
-Cyril Barthe | FRA | 1996 | rouleur
+Ewen Costiou | FRA | 2002 | rouleur
+Maxime Decomble | FRA | 2005 | rouleur
+Tom Donnenwirth | FRA | 1998 | rouleur
+Titouan Fontaine | FRA | 2005 | rouleur
+David Gaudu | FRA | 1996 | gc
+Kevin Geniets | LUX | 1997 | climber
+Lorenzo Germani | ITA | 2002 | rouleur
+Romain Grégoire | FRA | 2003 | puncheur
+Thibaud Gruel | FRA | 2004 | rouleur
+Axel Huens | FRA | 2001 | rouleur
+Johan Jacobs | SUI | 1997 | rouleur
+Josh Kench | NZL | 2001 | rouleur
+Olivier Le Gac | FRA | 1993 | rouleur
+Valentin Madouas | FRA | 1996 | puncheur
+Guillaume Martin | FRA | 1993 | climber
+Matteo Milan | ITA | 2003 | rouleur
+Rudy Molard | FRA | 1989 | climber
+Quentin Pacher | FRA | 1992 | puncheur
 Enzo Paleni | FRA | 2002 | cobbles
+Paul Penhoët | FRA | 2001 | sprinter
+Rémy Rochas | FRA | 1996 | climber
+Brieuc Rolland | FRA | 2003 | climber
+Clément Russo | FRA | 1995 | rouleur
+Bastien Tronchon | FRA | 2002 | rouleur
+
+## Lidl–Trek
+Juan Ayuso | ESP | 2002 | gc
+Andrea Bagioli | ITA | 1999 | puncheur
+Julien Bernard | FRA | 1992 | rouleur
+Giulio Ciccone | ITA | 1994 | climber
+Simone Consonni | ITA | 1994 | sprinter
+Tao Geoghegan Hart | GBR | 1995 | gc
+Amanuel Ghebreigzabhier | ERI | 1994 | rouleur
+Lennard Kämna | GER | 1996 | gc
+Patrick Konrad | AUT | 1991 | climber
+Søren Kragh Andersen | DEN | 1994 | puncheur
+Jonathan Milan | ITA | 2000 | sprinter
+Bauke Mollema | NED | 1986 | gc
+Jacopo Mosca | ITA | 1993 | rouleur
+Mathias Norsgaard | DEN | 1997 | tt
+Thibau Nys | BEL | 2002 | puncheur
+Sam Oomen | NED | 1995 | climber
+Mads Pedersen | DEN | 1995 | cobbles
+Quinn Simmons | USA | 2001 | puncheur
+Mattias Skjelmose | DEN | 2000 | puncheur
+Toms Skujiņš | LAT | 1991 | puncheur
+Matteo Sobrero | ITA | 1997 | tt
+Jakob Söderqvist | SWE | 2003 | tt
+Tim Torn Teutenberg | GER | 2002 | sprinter
+Edward Theuns | BEL | 1991 | cobbles
+Mathias Vacek | CZE | 2002 | cobbles
+Otto Vergaerde | BEL | 1994 | rouleur
+Carlos Verona | ESP | 1992 | climber
+Max Walscheid | GER | 1993 | rouleur
+Albert Withen Philipsen | DEN | 2006 | cobbles
+
+## Lotto–Intermarché
+Toon Aerts | BEL | 1993 | cobbles
+Huub Artz | NED | 2002 | rouleur
+Jenno Berckmoes | BEL | 2001 | rouleur
+Cedric Beullens | BEL | 1997 | rouleur
+Vito Braet | BEL | 2000 | rouleur
+Lars Craps | BEL | 2001 | rouleur
+Jasper De Buyst | BEL | 1993 | rouleur
+Arnaud De Lie | BEL | 2002 | sprinter
+Steffen De Schuyteneer | BEL | 2005 | rouleur
+Matthew Fox | AUS | 2002 | rouleur
+Joshua Giddings | GBR | 2003 | rouleur
+Sébastien Grignard | BEL | 1999 | tt
+Matys Grisel | FRA | 2005 | rouleur
+Simone Gualdi | ITA | 2005 | climber
+Mathieu Kockelmann | LUX | 2004 | rouleur
+Milan Menten | BEL | 1996 | sprinter
+Robin Orins | BEL | 2002 | tt
+Lorenzo Rota | ITA | 1995 | puncheur
+Jonas Rutsch | GER | 1998 | cobbles
+Liam Slock | BEL | 2000 | tt
+Lionel Taminiaux | BEL | 1996 | rouleur
+Reuben Thompson | NZL | 2001 | rouleur
+Luca Van Boven | BEL | 2000 | rouleur
+Taco van der Hoorn | NED | 1993 | cobbles
+Lennert Van Eetvelt | BEL | 2001 | puncheur
+Roel van Sintmaartensdijk | NED | 2001 | rouleur
+Baptiste Veistroffer | FRA | 2000 | rouleur
+Jarno Widar | BEL | 2005 | climber
+Georg Zimmermann | GER | 1997 | climber
+Felix Ørn-Kristoff | NOR | 2006 | rouleur
 
 ## Movistar Team
-Enric Mas | ESP | 1995
-Cian Uijtdebroeks | BEL | 2003
-Einer Rubio | COL | 1998
-Javier Romo | ESP | 1999 | climber
-Iván Romeo | ESP | 2003 | tt
-Pablo Castrillo | ESP | 2001
-Orluis Aular | VEN | 1996 | sprinter
-Nelson Oliveira | POR | 1989 | tt
-Davide Cimolai | ITA | 1989 | sprinter
-Gregor Mühlberger | AUT | 1994 | climber
+Roger Adrià | ESP | 1998 | puncheur
 Jorge Arcas | ESP | 1992 | rouleur
-Lorenzo Milesi | ITA | 2002 | tt
-Will Barta | USA | 1996 | rouleur
+Orluis Aular | VEN | 1996 | sprinter
+Jon Barrenetxea | ESP | 2000 | gc
 Carlos Canal | ESP | 2001 | puncheur
-Raúl García Pierna | ESP | 2001 | puncheur
-Fernando Gaviria | COL | 1994 | sprinter
+Pablo Castrillo | ESP | 2001 | climber
+Jefferson Alveiro Cepeda | ECU | 1996 | climber
+Davide Formolo | ITA | 1992 | climber
+Iván García Cortina | ESP | 1995 | rouleur
+Raúl García Pierna | ESP | 2001 | gc
+Michel Hessmann | GER | 2001 | rouleur
+Juan Pedro López | ESP | 1997 | climber
+Enric Mas | ESP | 1995 | gc
+Lorenzo Milesi | ITA | 2002 | tt
+Manlio Moro | ITA | 2002 | rouleur
+Pavel Novák | CZE | 2004 | climber
+Nelson Oliveira | POR | 1989 | tt
+Diego Pescador | COL | 2004 | climber
+Nairo Quintana | COL | 1990 | climber
+Iván Romeo | ESP | 2003 | tt
+Javier Romo | ESP | 1999 | climber
+Einer Rubio | COL | 1998 | climber
+Pelayo Sánchez | ESP | 2000 | rouleur
+Gonzalo Serrano | ESP | 1994 | rouleur
+Natnael Tesfatsion | ERI | 1999 | rouleur
+Albert Torres | ESP | 1990 | rouleur
+Cian Uijtdebroeks | BEL | 2003 | gc
 
-## Bahrain Victorious
-Santiago Buitrago | COL | 1999
-Antonio Tiberi | ITA | 2001
-Lenny Martinez | FRA | 2003
-Phil Bauhaus | GER | 1994
-Matej Mohorič | SLO | 1994 | puncheur
-Damiano Caruso | ITA | 1987 | gc
-Fred Wright | GBR | 1999 | cobbles
-Kamil Gradek | POL | 1990 | rouleur
-Nikias Arndt | GER | 1991 | rouleur
+## Netcompany INEOS Cycling Team
+Thymen Arensman | NED | 1999 | gc
+Andrew August | USA | 2005 | puncheur
+Egan Bernal | COL | 1997 | gc
+Laurens De Plus | BEL | 1995 | climber
+Tobias Foss | NOR | 1997 | tt
+Filippo Ganna | ITA | 1996 | tt
+Dorian Godon | FRA | 1996 | puncheur
 Jack Haig | AUS | 1993 | climber
-Afonso Eulálio | POR | 2001 | climber
-Alec Segaert | BEL | 2003 | tt
-Torstein Træen | NOR | 1995 | climber
-Robert Stannard | AUS | 1998 | puncheur
-Vlad Van Mechelen | BEL | 2004 | cobbles
-Pello Bilbao | ESP | 1990
-
-## Team Jayco–AlUla
-Ben O'Connor | AUS | 1995
-Luke Plapp | AUS | 2000 | tt
-Michael Matthews | AUS | 1990
-Mauro Schmid | SUI | 1999
-Eddie Dunbar | IRL | 1996 | climber
-Chris Harper | AUS | 1994
-Luke Durbridge | AUS | 1991 | rouleur
-Koen Bouwman | NED | 1993 | climber
-Elmar Reinders | NED | 1992 | rouleur
-Kelland O'Brien | AUS | 1998 | rouleur
-Felix Engelhardt | GER | 2000 | puncheur
-Anders Foldager | DEN | 2001 | rouleur
-Alan Hatherly | RSA | 1996 | puncheur
-Andrea Vendrame | ITA | 1994 | puncheur
-Pascal Ackermann | GER | 1994
-
-## Team Picnic PostNL
-Max Poole | GBR | 2003
-Warren Barguil | FRA | 1991
-Frank van den Broek | NED | 2000 | rouleur
-Pavel Bittner | CZE | 2002 | sprinter
-Timo Roosen | NED | 1993 | rouleur
-Sean Flynn | GBR | 2000 | puncheur
-Casper van Uden | NED | 2001
-Chris Hamilton | AUS | 1995 | climber
-Julius van den Berg | NED | 1996 | rouleur
-Gijs Leemreize | NED | 1999 | climber
-Kevin Vermaerke | USA | 2000 | puncheur
-Tim Naberman | NED | 1999 | rouleur
-Niklas Märkl | GER | 1999 | sprinter
-Tobias Lund Andresen | DEN | 2002
-
-## Lotto Intermarché
-Arnaud De Lie | BEL | 2002
-Lennert Van Eetvelt | BEL | 2001
-Biniam Girmay | ERI | 2000
-Gerben Thijssen | BEL | 1998
-Louis Barré | FRA | 2000 | puncheur
-Laurenz Rex | BEL | 1999 | cobbles
-Lorenzo Rota | ITA | 1995 | puncheur
-Georg Zimmermann | GER | 1997 | puncheur
-Jarno Widar | BEL | 2005 | climber
-Brent Van Moer | BEL | 1998 | tt
-Hugo Page | FRA | 2001 | cobbles
-Milan Menten | BEL | 1996 | sprinter
-Arne Marit | BEL | 1999 | rouleur
-Kobe Goossens | BEL | 1996 | climber
-Toon Aerts | BEL | 1993 | cobbles
-Eduardo Sepúlveda | ARG | 1991 | climber
-
-## XDS Astana Team
-Christian Scaroni | ITA | 1997 | puncheur
-Harold Tejada | COL | 1997
-Alberto Bettiol | ITA | 1993
-Mike Teunissen | NED | 1992
-Clément Champoussin | FRA | 1998
-Sergio Higuita | COL | 1997 | climber
-Wout Poels | NED | 1987 | climber
-Diego Ulissi | ITA | 1989
-Simone Velasco | ITA | 1995 | puncheur
-Lorenzo Fortunato | ITA | 1996 | climber
-Fausto Masnada | ITA | 1993 | climber
-Nicolas Vinokurov | KAZ | 2002 | puncheur
-Yevgeniy Fedorov | KAZ | 2000 | rouleur
-Davide Ballerini | ITA | 1994 | cobbles
-Ide Schelling | NED | 1998 | puncheur
-Matteo Malucelli | ITA | 1993 | sprinter
-Cees Bol | NED | 1995 | sprinter
-Max Kanter | GER | 1997
-Gleb Syritsa | RUS | 2000 | sprinter
-
-## Uno-X Mobility
-Tobias Halland Johannessen | NOR | 1999
-Magnus Cort | DEN | 1993
-Søren Wærenskjold | NOR | 2000
-Jonas Abrahamsen | NOR | 1995
-Andreas Leknessund | NOR | 1999 | gc
-Anders Halland Johannessen | NOR | 1999 | climber
-Markus Hoelgaard | NOR | 1994 | puncheur
-Rasmus Tiller | NOR | 1996 | cobbles
-Johannes Kulset | NOR | 2003 | climber
-Fredrik Dversnes | NOR | 1997 | rouleur
-Stian Fredheim | NOR | 2002 | sprinter
-Anthon Charmig | DEN | 1998 | climber
+Lucas Hamilton | AUS | 1996 | climber
+Kim Heiduk | GER | 2000 | rouleur
+Bob Jungels | LUX | 1992 | gc
+Michał Kwiatkowski | POL | 1990 | puncheur
+Victor Langellotti | MON | 1995 | puncheur
+Axel Laurance | FRA | 2001 | puncheur
+Oscar Onley | GBR | 2002 | gc
+Brandon Rivera | COL | 1996 | climber
+Carlos Rodríguez | ESP | 2001 | gc
+Óscar Rodríguez | ESP | 1995 | climber
+Magnus Sheffield | USA | 2002 | tt
+Artem Shmidt | USA | 2004 | climber
+Embret Svestad-Bårdseng | NOR | 2002 | climber
+Ben Swift | GBR | 1987 | sprinter
+Connor Swift | GBR | 1995 | cobbles
+Joshua Tarling | GBR | 2004 | tt
+Ben Turner | GBR | 1999 | cobbles
+Kévin Vauquelin | FRA | 2001 | puncheur
+Samuel Watson | GBR | 2001 | tt
+Sam Welsford | AUS | 1996 | sprinter
+Peter Øxenberg | DEN | 2005 | rouleur
 
 ## NSN Cycling Team
-Jake Stewart | GBR | 1999
-Corbin Strong | NZL | 2000 | puncheur
-Hugo Houle | CAN | 1990 | rouleur
-Nick Schultz | AUS | 1994 | climber
-Marco Frigo | ITA | 2000 | climber
-Krists Neilands | LAT | 1994 | puncheur
-Stephen Williams | GBR | 1996 | puncheur
-Alexey Lutsenko | KAZ | 1992 | climber
+Lewis Askey | GBR | 2001 | cobbles
+George Bennett | NZL | 1990 | climber
 Joseph Blackmore | GBR | 2003 | puncheur
-Riley Sheehan | USA | 2000 | cobbles
-Ethan Vernon | GBR | 2000 | sprinter
+Guillaume Boivin | CAN | 1989 | rouleur
+Simon Clarke | AUS | 1986 | puncheur
 Pier-André Côté | CAN | 1997 | puncheur
+Itamar Einhorn | ISR | 1997 | sprinter
+Marco Frigo | ITA | 2000 | climber
+Brady Gilmore | AUS | 2001 | rouleur
+Biniam Girmay | ERI | 2000 | sprinter
+Jan Hirt | CZE | 1991 | climber
+Hugo Hofstetter | FRA | 1994 | sprinter
+Oded Kogut | ISR | 2001 | sprinter
 Matis Louvel | FRA | 1999 | cobbles
-Dylan Teuns | BEL | 1992 | puncheur
+Alexey Lutsenko | KAZ | 1992 | cobbles
+Pau Martí | ESP | 2004 | rouleur
+Ryan Mullen | IRL | 1994 | tt
+Krists Neilands | LAT | 1994 | puncheur
+Alessandro Pinarello | ITA | 2003 | rouleur
+Nadav Raisberg | ISR | 2001 | sprinter
+Nick Schultz | AUS | 1994 | climber
+Riley Sheehan | USA | 2000 | cobbles
+Jake Stewart | GBR | 1999 | sprinter
+Corbin Strong | NZL | 2000 | puncheur
+Tom Van Asbroeck | BEL | 1990 | rouleur
+Floris Van Tricht | BEL | 2001 | rouleur
+Ethan Vernon | GBR | 2000 | sprinter
+Stephen Williams | GBR | 1996 | puncheur
+
+## Red Bull–Bora–Hansgrohe
+Giovanni Aleotti | ITA | 1999 | rouleur
+Adrien Boichis | FRA | 2003 | rouleur
+Mattia Cattaneo | ITA | 1990 | gc
+Nico Denz | GER | 1994 | rouleur
+Jarrad Drizners | AUS | 1999 | rouleur
+Haimar Etxeberria | ESP | 2003 | rouleur
+Remco Evenepoel | BEL | 2000 | gc
+Finn Fisher-Black | NZL | 2001 | puncheur
+Alexander Hajek | AUT | 2003 | rouleur
+Emil Herzog | GER | 2004 | rouleur
+Jai Hindley | AUS | 1996 | gc
+Florian Lipowitz | GER | 2000 | gc
+Arne Marit | BEL | 1999 | rouleur
+Daniel Martínez | COL | 1996 | gc
+Jordi Meeus | BEL | 1998 | sprinter
+Gianni Moscon | ITA | 1994 | cobbles
+Giulio Pellizzari | ITA | 2003 | climber
+Laurence Pithie | NZL | 2002 | cobbles
+Primož Roglič | SLO | 1989 | gc
+Callum Thornley | GBR | 2003 | rouleur
+Jan Tratnik | SLO | 1990 | rouleur
+Luke Tuckwell | AUS | 2004 | climber
+Mick van Dijke | NED | 2000 | rouleur
+Tim van Dijke | NED | 2000 | cobbles
+Maxim Van Gils | BEL | 1999 | puncheur
+Danny van Poppel | NED | 1993 | sprinter
+Gianni Vermeersch | BEL | 1992 | cobbles
+Aleksandr Vlasov | RUS | 1996 | gc
+Frederik Wandahl | DEN | 2001 | rouleur
+Ben Zwiehoff | GER | 1994 | climber
+
+## Soudal–Quick-Step
+Ayco Bastiaens | BEL | 1996 | rouleur
+Steff Cras | BEL | 1996 | climber
+Alberto Dainese | ITA | 1998 | sprinter
+Pascal Eenkhoorn | NED | 1997 | rouleur
+Gianmarco Garofoli | ITA | 2002 | climber
+Gil Gelders | BEL | 2002 | rouleur
+Ethan Hayter | GBR | 1998 | tt
+Yves Lampaert | BEL | 1991 | cobbles
+Mikel Landa | ESP | 1989 | gc
+Junior Lecerf | BEL | 2002 | rouleur
+Paul Magnier | FRA | 2004 | sprinter
+Tim Merlier | BEL | 1992 | sprinter
+Valentin Paret-Peintre | FRA | 2001 | climber
+Casper Pedersen | DEN | 1996 | rouleur
+Andrea Raccagni Noviero | ITA | 2004 | rouleur
+Pepijn Reinderink | NED | 2002 | rouleur
+Laurenz Rex | BEL | 1999 | cobbles
+Maximilian Schachmann | GER | 1994 | gc
+Jasper Stuyven | BEL | 1992 | cobbles
+Martin Svrček | SVK | 2003 | rouleur
+Dylan van Baarle | NED | 1992 | cobbles
+Fabio Van den Bossche | BEL | 2000 | rouleur
+Dries Van Gestel | BEL | 1994 | cobbles
+Bert Van Lerberghe | BEL | 1992 | rouleur
+Ilan Van Wilder | BEL | 2000 | gc
+Warre Vangheluwe | BEL | 2001 | cobbles
+Mauri Vansevenant | BEL | 1999 | puncheur
+Louis Vervaeke | BEL | 1993 | climber
+Jonathan Vervenne | BEL | 2003 | tt
+Filippo Zana | ITA | 1999 | climber
+
+## Team Bahrain Victorious
+Nikias Arndt | GER | 1991 | rouleur
+Phil Bauhaus | GER | 1994 | sprinter
+Pello Bilbao | ESP | 1990 | gc
+Alessandro Borgo | ITA | 2005 | rouleur
+Alberto Bruttomesso | ITA | 2003 | rouleur
+Santiago Buitrago | COL | 1999 | climber
+Damiano Caruso | ITA | 1987 | gc
+Roman Ermakov | RUS | 2004 | rouleur
+Žak Eržen | SLO | 2005 | rouleur
+Afonso Eulálio | POR | 2001 | climber
+Matevž Govekar | SLO | 2000 | gc
+Kamil Gradek | POL | 1990 | cobbles
+Rainer Kepplinger | AUT | 1997 | rouleur
+Lenny Martinez | FRA | 2003 | climber
+Fran Miholjević | CRO | 2002 | rouleur
+Pau Miquel | ESP | 2000 | climber
+Matej Mohorič | SLO | 1994 | puncheur
+Jakob Omrzel | SLO | 2006 | rouleur
+Mathijs Paasschens | NED | 1996 | rouleur
+Alec Segaert | BEL | 2003 | tt
+Daniel Skerl | ITA | 2003 | rouleur
+Robert Stannard | AUS | 1998 | puncheur
+Oliver Stockwell | GBR | 2002 | rouleur
+Antonio Tiberi | ITA | 2001 | gc
+Attila Valter | HUN | 1998 | climber
+Max van der Meulen | NED | 2004 | climber
+Vlad Van Mechelen | BEL | 2004 | cobbles
+Edoardo Zambanini | ITA | 2001 | climber
+
+## Team Jayco–AlUla
+Pascal Ackermann | GER | 1994 | sprinter
+Koen Bouwman | NED | 1993 | climber
+Amaury Capiot | BEL | 1993 | rouleur
+Filippo Conca | ITA | 1998 | rouleur
+Alessandro Covi | ITA | 1998 | rouleur
+Dries De Bondt | BEL | 1991 | cobbles
+Dries De Pooter | BEL | 2002 | rouleur
+Davide De Pretto | ITA | 2002 | rouleur
+Robert Donaldson | GBR | 2002 | rouleur
+Paul Double | GBR | 1996 | climber
+Luke Durbridge | AUS | 1991 | rouleur
+Felix Engelhardt | GER | 2000 | puncheur
+Anders Foldager | DEN | 2001 | rouleur
+Patrick Gamper | AUT | 1997 | rouleur
+Alan Hatherly | RSA | 1996 | puncheur
+Asbjørn Hellemose | DEN | 1999 | rouleur
+Christopher Juul-Jensen | DEN | 1989 | cobbles
+Jelte Krijnsen | NED | 2001 | rouleur
+Michael Matthews | AUS | 1990 | puncheur
+Hamish McKenzie | AUS | 2004 | tt
+Luka Mezgec | SLO | 1988 | sprinter
+Kelland O'Brien | AUS | 1998 | rouleur
+Ben O'Connor | AUS | 1995 | gc
+Finlay Pickering | GBR | 2003 | rouleur
+Luke Plapp | AUS | 2000 | tt
+Rudy Porter | AUS | 2000 | rouleur
+Mauro Schmid | SUI | 1999 | puncheur
+Jasha Sütterlin | GER | 1992 | cobbles
+Andrea Vendrame | ITA | 1994 | puncheur
+
+## Team Picnic–PostNL
+Warren Barguil | FRA | 1991 | puncheur
+Frits Biesterbos | NED | 2002 | rouleur
+Pavel Bittner | CZE | 2002 | sprinter
+Dillon Corkery | IRL | 1999 | rouleur
+Timo de Jong | NED | 1999 | rouleur
+John Degenkolb | GER | 1989 | cobbles
+Robbe Dhondt | BEL | 2004 | rouleur
+Matthew Dinham | AUS | 2000 | rouleur
+Nils Eekhoff | NED | 1998 | rouleur
+Alexy Faure Prost | FRA | 2004 | rouleur
+Sean Flynn | GBR | 2000 | puncheur
+Mattia Gaffuri | ITA | 1999 | climber
+Chris Hamilton | AUS | 1995 | climber
+Fabio Jakobsen | NED | 1996 | sprinter
+James Knox | GBR | 1995 | climber
+Bjoern Koerdt | GBR | 2004 | rouleur
+Gijs Leemreize | NED | 1999 | climber
+Niklas Märkl | GER | 1999 | sprinter
+Juan Guillermo Martínez | COL | 2004 | climber
+Tim Naberman | NED | 1999 | rouleur
+Oliver Peace | GBR | 2005 | climber
+Max Poole | GBR | 2003 | gc
+Henri-François Renard-Haquin | FRA | 2002 | rouleur
+Timo Roosen | NED | 1993 | rouleur
+Julius van den Berg | NED | 1996 | rouleur
+Frank van den Broek | NED | 2000 | rouleur
+Casper van Uden | NED | 2001 | sprinter
+Bram Welten | NED | 1997 | rouleur
+
+## UAE Team Emirates XRG
+João Almeida | POR | 1998 | gc
+Igor Arrieta | ESP | 2002 | climber
+Filippo Baroncini | ITA | 2000 | cobbles
+Mikkel Bjerg | DEN | 1998 | tt
+Jan Christen | SUI | 2004 | puncheur
+Benoît Cosnefroy | FRA | 1995 | puncheur
+Isaac del Toro | MEX | 2003 | gc
+Felix Großschartner | AUT | 1993 | climber
+Rune Herregodts | BEL | 1998 | rouleur
+Julius Johansen | DEN | 1999 | tt
+Vegard Stake Laengen | NOR | 1989 | rouleur
+Brandon McNulty | USA | 1998 | tt
+Juan Sebastián Molano | COL | 1994 | sprinter
+António Morgado | POR | 2004 | puncheur
+Jhonatan Narváez | ECU | 1997 | puncheur
+Domen Novak | SLO | 1995 | climber
+Ivo Oliveira | POR | 1996 | rouleur
+Rui Oliveira | POR | 1996 | rouleur
+Adrià Pericas | ESP | 2006 | rouleur
+Tadej Pogačar | SLO | 1998 | gc
+Nils Politt | GER | 1994 | cobbles
+Pavel Sivakov | FRA | 1997 | climber
+Marc Soler | ESP | 1993 | climber
+Pablo Torres | ESP | 2005 | climber
+Kevin Vermaerke | USA | 2000 | puncheur
+Florian Vermeersch | BEL | 1999 | cobbles
+Jay Vine | AUS | 1995 | climber
+Tim Wellens | BEL | 1991 | puncheur
+Adam Yates | GBR | 1992 | gc
+
+## Uno-X Mobility
+Jonas Abrahamsen | NOR | 1995 | puncheur
+Carl-Frederik Bévort | DEN | 2003 | rouleur
+Erlend Blikra | NOR | 1997 | rouleur
+William Blume Levy | DEN | 2001 | rouleur
+Sven Erik Bystrøm | NOR | 1992 | rouleur
+Anthon Charmig | DEN | 1998 | puncheur
+Magnus Cort | DEN | 1993 | puncheur
+Simon Dalby | DEN | 2003 | rouleur
+Fredrik Dversnes | NOR | 1997 | rouleur
+Stian Fredheim | NOR | 2003 | cobbles
+Markus Hoelgaard | NOR | 1994 | puncheur
+Ådne Holter | NOR | 2000 | rouleur
+Jonas Iversby Hvideberg | NOR | 1999 | rouleur
+Storm Ingebrigtsen | NOR | 2005 | rouleur
+Anders Halland Johannessen | NOR | 1999 | climber
+Tobias Halland Johannessen | NOR | 1999 | gc
+Alexander Kamp | DEN | 1993 | rouleur
+Andreas Kron | DEN | 1998 | puncheur
+Johannes Kulset | NOR | 2004 | climber
+Andreas Leknessund | NOR | 1999 | gc
+Sakarias Koller Løland | NOR | 2001 | rouleur
+Henrik Pedersen | DEN | 2004 | rouleur
+Erik Nordsæter Resell | NOR | 1996 | rouleur
+Anders Skaarseth | NOR | 1995 | rouleur
+Tobias Svarre | DEN | 2004 | rouleur
+Rasmus Tiller | NOR | 1996 | cobbles
+Martin Tjøtta | NOR | 2001 | climber
+Torstein Træen | NOR | 1995 | climber
+Martin Urianstad | NOR | 1999 | rouleur
+Søren Wærenskjold | NOR | 2000 | tt
+
+## Visma–Lease a Bike
+Edoardo Affini | ITA | 1996 | tt
+Bruno Armirail | FRA | 1994 | tt
+Louis Barré | FRA | 2000 | puncheur
+Niklas Behrens | GER | 2003 | sprinter
+Matthew Brennan | GBR | 2005 | sprinter
+Victor Campenaerts | BEL | 1991 | rouleur
+Owain Doull | GBR | 1993 | rouleur
+Filippo Fiorelli | ITA | 1994 | rouleur
+Tijmen Graat | NED | 2003 | rouleur
+Per Strand Hagenes | NOR | 2003 | puncheur
+Menno Huising | NED | 2004 | rouleur
+Matteo Jorgenson | USA | 1999 | gc
+Wilco Kelderman | NED | 1991 | gc
+Timo Kielich | BEL | 1999 | puncheur
+Steven Kruijswijk | NED | 1987 | gc
+Sepp Kuss | USA | 1994 | climber
+Christophe Laporte | FRA | 1992 | cobbles
+Bart Lemmen | NED | 1995 | climber
+Pietro Mattio | ITA | 2004 | rouleur
+Jørgen Nordhagen | NOR | 2005 | climber
+Davide Piganzoli | ITA | 2002 | climber
+Tim Rex | BEL | 2004 | rouleur
+Anton Schiffer | GER | 1999 | climber
+Ben Tulett | GBR | 2001 | climber
+Wout van Aert | BEL | 1994 | cobbles
+Loe van Belle | NED | 2002 | rouleur
+Jonas Vingegaard | DEN | 1996 | gc
+Axel Zingle | FRA | 1998 | puncheur
+
+## XDS Astana Team
+Davide Ballerini | ITA | 1994 | cobbles
+Alberto Bettiol | ITA | 1993 | cobbles
+Clément Champoussin | FRA | 1998 | puncheur
+Nicola Conci | ITA | 1997 | rouleur
+Yevgeniy Fedorov | KAZ | 2000 | rouleur
+Lorenzo Fortunato | ITA | 1996 | climber
+Aaron Gate | NZL | 1990 | rouleur
+Lev Gonov | RUS | 2000 | rouleur
+Sergio Higuita | COL | 1997 | climber
+Florian Samuel Kajamini | ITA | 2003 | climber
+Max Kanter | GER | 1997 | sprinter
+Anton Kuzmin | KAZ | 1996 | rouleur
+Arjen Livyns | BEL | 1994 | rouleur
+Harold Martín López | ECU | 2000 | climber
+Matteo Malucelli | ITA | 1993 | sprinter
+Henok Mulubrhan | ERI | 1999 | puncheur
+Cristián Rodríguez | ESP | 1995 | climber
+Alessandro Romele | ITA | 2003 | rouleur
+Christian Scaroni | ITA | 1997 | puncheur
+Marco Schrettl | AUT | 2003 | rouleur
+Guillermo Thomas Silva | URU | 2001 | puncheur
+Su Haoyu | CHN | 2000 | rouleur
+Gleb Syritsa | RUS | 2000 | sprinter
+Harold Tejada | COL | 1997 | climber
+Mike Teunissen | NED | 1992 | cobbles
+Davide Toneatti | ITA | 2001 | rouleur
+Diego Ulissi | ITA | 1989 | puncheur
+Darren van Bekkum | NED | 2002 | climber
+Simone Velasco | ITA | 1995 | puncheur
+Nicolas Vinokurov | KAZ | 2002 | puncheur
