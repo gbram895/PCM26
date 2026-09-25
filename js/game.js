@@ -103,8 +103,36 @@ PCM.Game = (function () {
     }
   }
   function calendarFor(G) {
-    return DATA.CALENDAR.map(tpl => Race.instantiate(G.world === 'real' && tpl.realName ? { ...tpl, name: tpl.realName } : tpl, G.year));
+    const cal = DATA.CALENDAR.map(tpl => Race.instantiate(G.world === 'real' && tpl.realName ? { ...tpl, name: tpl.realName } : tpl, G.year));
+    assignInvites(G, cal);
+    return cal;
   }
+
+  // ---------------- invitations (ProTeams) ----------------
+  // WorldTeams ride everything. The best ProTeams get automatic invitations; the rest compete for wildcards,
+  // which favour teams from the race's home country.
+  const WILDCARDS = { GT: 2, WT: 3, PRO: 6, MON: 4, CL: 4 };
+  function proTeams(G) { return Object.values(G.teams).filter(t => t.tier === 'PRO'); }
+  function assignInvites(G, cal) {
+    const pros = proTeams(G);
+    if (!pros.length) return;
+    const wt = Object.values(G.teams).filter(t => t.tier !== 'PRO').map(t => t.id);
+    const auto = (G.autoInvites || []).filter(id => G.teams[id]);
+    const rest = pros.filter(t => !auto.includes(t.id));
+    for (const race of cal) {
+      const wild = R.weightedN(rest, Math.min(rest.length, WILDCARDS[race.cls] || 2),
+        t => (t.nat === race.country ? 12 : 1) * Math.exp((teamStrength(G, t) - 70) / 4));
+      race.invited = wt.concat(auto, wild.map(t => t.id));
+    }
+    const me = player(G);
+    if (me && me.tier === 'PRO') {
+      const n = cal.filter(r => r.invited.includes(me.id)).length;
+      inbox(G, 'Race invitations', auto.includes(me.id)
+        ? `As one of the top ProTeams we have automatic invitations to all ${cal.length} WorldTour races this season.`
+        : `We have received wildcard invitations to ${n} of the ${cal.length} WorldTour races: ${cal.filter(r => r.invited.includes(me.id)).map(r => r.name).join(', ') || 'none'}. Finish as a top-3 ProTeam to be invited everywhere next season.`);
+    }
+  }
+  function isInvited(G, race, teamId) { return !race.invited || race.invited.includes(teamId); }
 
   function newGame({ teamId, manager, seed, customName, world }) {
     seed = seed || (Math.floor(Math.random() * 1e9) + 1);
@@ -119,7 +147,7 @@ PCM.Game = (function () {
     const defs = teamDefs(G.world);
     for (const t of defs) {
       G.teams[t.id] = {
-        id: t.id, name: t.name, nat: t.nat, prestige: t.prestige, c1: t.c1, c2: t.c2,
+        id: t.id, name: t.name, nat: t.nat, prestige: t.prestige, c1: t.c1, c2: t.c2, tier: t.tier || 'WT',
         riders: [], cash: 0, sponsor: 0, season: { pts: 0, wins: 0 }, log: [], history: [], expRank: 0,
       };
     }
@@ -132,6 +160,7 @@ PCM.Game = (function () {
       t.cash = Math.round(t.sponsor * 0.15 / 10000) * 10000;
     }
     addFreeAgents(G, 30, 18);
+    G.autoInvites = defs.filter(d => d.autoInvite).map(d => d.id);
     G.calendar = calendarFor(G);
     computeExpectedRanks(G);
     setObjectives(G);
@@ -187,8 +216,18 @@ PCM.Game = (function () {
   };
   function setObjectives(G) {
     const t = player(G);
+    if (t.tier === 'PRO') {
+      const pros = proTeams(G).sort((a, b) => teamStrength(G, b) - teamStrength(G, a));
+      const target = Math.min(pros.length, Math.max(3, pros.indexOf(t) + 2));
+      G.board.objectives = [
+        { id: 'prorank', target, text: `Finish in the top ${target} of the ProTeams${target <= 3 ? ' (automatic invitations next season)' : ''}` },
+        { id: 'wins', target: 1, text: 'Win at least 1 race or stage' },
+        { id: 'mon10', text: SPECIAL[1].text },
+      ];
+      return;
+    }
     const tier = U.clamp(Math.round(6 - t.expRank / 3.6), 1, 5); // expectations follow squad strength
-    const rankTarget = Math.min(18, t.expRank + 2);
+    const rankTarget = Math.min(Object.keys(G.teams).length, t.expRank + 2);
     const wins = [2, 4, 8, 14, 22][tier - 1];
     G.board.objectives = [
       { id: 'rank', target: rankTarget, text: `Finish in the top ${rankTarget} of the team ranking` },
@@ -200,6 +239,7 @@ PCM.Game = (function () {
     const t = player(G);
     const log = t.log;
     switch (o.id) {
+      case 'prorank': { const pos = teamRanking(G).filter(x => x.tier === 'PRO').indexOf(t) + 1; return { done: pos <= o.target, progress: 'Currently ' + U.ordinal(pos) + ' ProTeam' }; }
       case 'rank': { const pos = teamRanking(G).indexOf(t) + 1; return { done: pos <= o.target, progress: 'Currently ' + U.ordinal(pos) }; }
       case 'wins': return { done: t.season.wins >= o.target, progress: t.season.wins + ' / ' + o.target };
       case 'gtwin': { const d = log.some(l => l.cls === 'GT' && l.kind === 'gc' && l.pos === 1); return { done: d, progress: d ? 'Achieved' : 'Not yet' }; }
@@ -215,7 +255,8 @@ PCM.Game = (function () {
   function startRace(G, race, playerEntries) {
     const byTeam = {};
     for (const id in G.teams) {
-      if (id === G.playerTeamId) byTeam[id] = playerEntries;
+      if (!isInvited(G, race, id)) continue;
+      if (id === G.playerTeamId) { if (playerEntries) byTeam[id] = playerEntries; }
       else byTeam[id] = Race.selectRoster(G, G.teams[id], race);
     }
     Race.start(G, race, byTeam);
@@ -297,7 +338,13 @@ PCM.Game = (function () {
   // Continue button. Returns {status: 'race'|'advanced'|'season-end'}
   function advance(G) {
     const race = currentRace(G);
-    if (race && race.status !== 'done') return { status: 'race', race };
+    if (race && race.status !== 'done') {
+      if (isInvited(G, race, G.playerTeamId)) return { status: 'race', race };
+      // not invited: the race runs without us
+      startRace(G, race, null);
+      while (race.status !== 'done') simStage(G, race, 'bal');
+      race.absent = true;
+    }
     if (G.week > W) return { status: 'season-end' };
     if (race && race.status === 'done' && race.week === G.week) {
       for (let i = 0; i < race.weeks; i++) processWeek(G, race.racers);
@@ -306,9 +353,9 @@ PCM.Game = (function () {
       processWeek(G, []);
     }
     const nr = currentRace(G);
-    if (nr && nr.status !== 'done') return { status: 'race', race: nr };
+    if (nr && nr.status !== 'done' && isInvited(G, nr, G.playerTeamId)) return { status: 'race', race: nr };
     if (G.week > W) return { status: 'season-end' };
-    return { status: 'advanced' };
+    return { status: 'advanced', skipped: race && race.absent ? race : null };
   }
 
   // quickly play a whole race for the player with auto-selection
@@ -411,6 +458,9 @@ PCM.Game = (function () {
     const t = player(G);
     const ranking = teamRanking(G);
     const rank = ranking.indexOf(t) + 1;
+    // the best three ProTeams earn automatic invitations for next season
+    const topPros = ranking.filter(x => x.tier === 'PRO').slice(0, 3).map(x => x.id);
+    if (topPros.length) G.autoInvites = topPros;
     const objectives = G.board.objectives.map(o => ({ text: o.text, ...evalObjective(G, o) }));
     const met = objectives.filter(o => o.done).length;
     let conf = G.board.confidence + met * 12 - (objectives.length - met) * 12 + (t.cash >= 0 ? 4 : -15);
@@ -553,7 +603,7 @@ PCM.Game = (function () {
   function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 
   return {
-    newGame, realAvailable, teamDefs, advance, processWeek, startRace, simStage, autoRace, currentRace, nextRace, endSeason, jobOffers, takeJob,
+    newGame, realAvailable, teamDefs, isInvited, advance, processWeek, startRace, simStage, autoRace, currentRace, nextRace, endSeason, jobOffers, takeJob,
     offer, renew, release, releaseCost, askingSalary, askingFee, payroll, player, teamRanking, riderRanking, teamStrength,
     evalObjective, news, inbox, ledger, serialize, deserialize, save, load, clearSave, inRunningRace,
     MAX_ROSTER, MIN_ROSTER,

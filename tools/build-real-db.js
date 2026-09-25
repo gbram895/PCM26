@@ -137,21 +137,39 @@ function parseRoster(text) {
 
 // "List of <season> UCI WorldTeams and riders": one section per team with
 // {{Cycling squad rider|name=[[Page|Name]]|nat=XXX|birthdate={{birth date and age2|...|ref Y|M|D|birth Y|M|D}}}}
+function parseRiderLine(line) {
+  if (!/Cycling squad rider/i.test(line)) return null;
+  const link = /name\s*=\s*\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/.exec(line);
+  if (!link) return null;
+  const nat = (/\|\s*nat\s*=\s*([A-Z]{3})/.exec(line) || [])[1] || null;
+  const nums = ((/birth date(?: and age2?)?\s*\|([^}]*)\}\}/i.exec(line) || [])[1] || '').split('|').map(x => x.trim()).filter(x => /^\d+$/.test(x));
+  const born = nums.length >= 3 ? `${nums[nums.length - 3]}-${nums[nums.length - 2].padStart(2, '0')}-${nums[nums.length - 1].padStart(2, '0')}` : null;
+  return { title: link[1].trim(), display: (link[2] || link[1]).replace(/\s*\(.*\)\s*$/, '').trim(), nat, born };
+}
 function parseTeamList(text) {
   const teams = [];
   let cur = null;
   for (const line of text.split('\n')) {
     const h = /^===\s*(.+?)\s*===\s*$/.exec(line);
-    if (h) { cur = { name: h[1].replace(/\[\[|\]\]/g, ''), roster: [] }; teams.push(cur); continue; }
-    if (!cur || !/Cycling squad rider/i.test(line)) continue;
-    const link = /name\s*=\s*\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/.exec(line);
-    if (!link) continue;
-    const nat = (/\|\s*nat\s*=\s*([A-Z]{3})/.exec(line) || [])[1] || null;
-    const nums = ((/birth date(?: and age2?)?\s*\|([^}]*)\}\}/i.exec(line) || [])[1] || '').split('|').map(x => x.trim()).filter(x => /^\d+$/.test(x));
-    const born = nums.length >= 3 ? `${nums[nums.length - 3]}-${nums[nums.length - 2].padStart(2, '0')}-${nums[nums.length - 1].padStart(2, '0')}` : null;
-    cur.roster.push({ title: link[1].trim(), display: (link[2] || link[1]).replace(/\s*\(.*\)\s*$/, '').trim(), nat, born });
+    if (h) { cur = { name: h[1].replace(/\[\[|\]\]/g, ''), roster: [], updated: 0 }; teams.push(cur); continue; }
+    if (cur && /\{\{\s*updated\s*\|/i.test(line)) cur.updated = updatedDate(line);
+    const r = cur && parseRiderLine(line);
+    if (r) cur.roster.push(r);
   }
   return teams.filter(t => t.roster.length >= 10);
+}
+// A team article's "Team roster" section, in the same {{Cycling squad rider}} format
+function parseSquad(text) {
+  const sec = sections(text).find(s => /roster|squad/i.test(s.title) && !/staff|former/i.test(s.title));
+  const body = sec ? sec.full : '';
+  const roster = body.split('\n').map(parseRiderLine).filter(Boolean);
+  roster.updated = updatedDate(body);
+  return roster;
+}
+function updatedDate(text) {
+  const m = /\{\{\s*updated\s*\|\s*([^<|}]+)/i.exec(text || '');
+  const t = m ? Date.parse(m[1].replace(/\.$/, '').trim()) : NaN;
+  return isNaN(t) ? 0 : t;
 }
 
 function infoboxField(text, key) {
@@ -228,7 +246,11 @@ const TEAM_STYLE = [
   [/jayco/i, 'AUS', '#0b5aa2', '#f28c28'], [/picnic|postnl/i, 'NED', '#e5002b', '#ffffff'], [/intermarch/i, 'BEL', '#0a4ea3', '#ffd200'],
   [/lotto/i, 'BEL', '#d71920', '#ffffff'], [/uno-?x/i, 'NOR', '#d4002e', '#ffffff'], [/astana|xds/i, 'KAZ', '#00aeef', '#ffd200'],
   [/nsn|israel/i, 'SUI', '#1c3f94', '#ffffff'], [/cofidis/i, 'FRA', '#d0021b', '#ffffff'], [/arkéa|arkea/i, 'FRA', '#ee2e24', '#111111'],
-  [/tudor/i, 'SUI', '#b3001b', '#ffffff'], [/q36/i, 'SUI', '#222222', '#9aa0a6'], [/totalenergies/i, 'FRA', '#00a0e3', '#e30613'],
+  [/tudor/i, 'SUI', '#b3001b', '#ffffff'], [/bardiani/i, 'ITA', '#4caf50', '#111111'], [/burgos/i, 'ESP', '#6a1b9a', '#ffffff'],
+  [/caja rural/i, 'ESP', '#007a3d', '#ffffff'], [/kern/i, 'ESP', '#d7263d', '#ffffff'], [/euskaltel/i, 'ESP', '#ff6f00', '#ffffff'],
+  [/mbh/i, 'HUN', '#003a70', '#e4002b'], [/modern adventure/i, 'USA', '#1f2937', '#f59e0b'], [/solution tech|nippo/i, 'ITA', '#e11d48', '#111111'],
+  [/flanders/i, 'BEL', '#ffd200', '#111111'], [/novo nordisk/i, 'USA', '#0033a0', '#ffffff'], [/polti/i, 'ITA', '#d90429', '#ffffff'],
+  [/unibet/i, 'NED', '#147b45', '#111111'], [/q36/i, 'SUI', '#222222', '#9aa0a6'], [/totalenergies/i, 'FRA', '#00a0e3', '#e30613'],
 ];
 function teamStyle(name, riders) {
   for (const [re, nat, c1, c2] of TEAM_STYLE) if (re.test(name)) return { nat, c1, c2 };
@@ -240,7 +262,9 @@ function teamStyle(name, riders) {
 }
 const TEAM_CODES = [[/uae/i, 'UAD'], [/visma/i, 'TVL'], [/red bull|bora/i, 'RBH'], [/lidl/i, 'LTK'], [/ineos/i, 'IGD'], [/soudal|quick/i, 'SOQ'],
   [/alpecin/i, 'APT'], [/\bef\b|education/i, 'EFE'], [/decathlon/i, 'DCT'], [/groupama|fdj/i, 'GFC'], [/movistar/i, 'MOV'], [/bahrain/i, 'TBV'],
-  [/jayco/i, 'JAY'], [/picnic|postnl/i, 'TPP'], [/lotto|intermarch/i, 'LOI'], [/astana|xds/i, 'XAT'], [/uno-?x/i, 'UXM'], [/nsn|israel/i, 'NSN']];
+  [/jayco/i, 'JAY'], [/cofidis/i, 'COF'], [/q36/i, 'PQT'], [/tudor/i, 'TUD'], [/totalenergies/i, 'TEN'], [/unibet/i, 'URR'],
+  [/bardiani/i, 'BCS'], [/burgos/i, 'BBH'], [/caja rural/i, 'CJR'], [/kern/i, 'EKP'], [/euskaltel/i, 'EUS'], [/mbh/i, 'MBH'],
+  [/modern adventure/i, 'MAP'], [/solution tech|nippo/i, 'STN'], [/flanders/i, 'TFB'], [/novo nordisk/i, 'TNN'], [/polti/i, 'PTV'], [/picnic|postnl/i, 'TPP'], [/lotto|intermarch/i, 'LOI'], [/astana|xds/i, 'XAT'], [/uno-?x/i, 'UXM'], [/nsn|israel/i, 'NSN']];
 function teamId(name, used) {
   for (const [re, code] of TEAM_CODES) if (re.test(name) && !used.has(code)) { used.add(code); return code; }
   const words = name.replace(/[^A-Za-z\s-]/g, '').split(/[\s-]+/).filter(Boolean);
@@ -270,7 +294,13 @@ function parseSeed(text) {
   for (const raw of text.split('\n')) {
     const line = raw.trim();
     if (!line || line.startsWith('# ')) continue;
-    if (line.startsWith('## ')) { cur = { name: line.slice(3).trim(), riders: [] }; teams.push(cur); continue; }
+    if (line.startsWith('## ')) {
+      const m = /^##\s*(.+?)\s*(?:\[([^\]]*)\])?\s*$/.exec(line);
+      const tags = (m[2] || '').toLowerCase();
+      cur = { name: m[1], riders: [], tier: /proteam/.test(tags) ? 'PRO' : 'WT', autoInvite: /auto-invite/.test(tags) };
+      teams.push(cur);
+      continue;
+    }
     if (!cur || line.startsWith('#')) continue;
     const [name, nat, year, type] = line.split('|').map(x => x.trim());
     if (!name) continue;
@@ -296,13 +326,16 @@ function assemble(rawTeams, overrides) {
       const parts = r.name.split(' ');
       return { name: r.name, first: parts[0], last: parts.slice(1).join(' ') || parts[0], nat: r.nat || 'UNK', born: r.born || `${SEASON - 27}-07-01`, type, level };
     });
-    out.push({ id: teamId(t.name, used), name: t.name, ...teamStyle(t.name, riders), riders });
+    out.push({ id: teamId(t.name, used), name: t.name, tier: t.tier || 'WT', autoInvite: !!t.autoInvite, ...teamStyle(t.name, riders), riders });
   }
   return { out, tuned, estimated };
 }
 function writeOut(out, source, extra) {
   const strength = t => { const l = t.riders.map(r => r.level).sort((a, b) => b - a).slice(0, 10); return l.reduce((a, b) => a + b, 0) / l.length; };
-  out.sort((a, b) => strength(b) - strength(a)).forEach((t, i) => { t.prestige = i < 3 ? 5 : i < 7 ? 4 : i < 11 ? 3 : i < 15 ? 2 : 1; });
+  const wt = out.filter(t => t.tier !== 'PRO').sort((a, b) => strength(b) - strength(a));
+  wt.forEach((t, i) => { t.prestige = i < 3 ? 5 : i < 7 ? 4 : i < 11 ? 3 : i < 15 ? 2 : 1; });
+  for (const t of out) if (t.tier === 'PRO') t.prestige = t.autoInvite ? 2 : 1;
+  out.sort((a, b) => (a.tier === 'PRO') - (b.tier === 'PRO') || b.prestige - a.prestige || strength(b) - strength(a));
   const data = { season: SEASON, source, built: new Date().toISOString().slice(0, 10), teams: out };
   fs.writeFileSync(OUT, `// Generated by tools/build-real-db.js on ${data.built} from ${source}.\n` +
     `// Ratings are estimates.\nvar PCM = globalThis.PCM || (globalThis.PCM = {});\nPCM.REAL = ${JSON.stringify(data, null, 1)};\n`);
@@ -336,6 +369,31 @@ async function main() {
     if (roster.length < 15) { console.log(`  skip ${name}: no roster found`); continue; }
     teams.push({ name, roster });
   }
+  for (const t of teams) t.tier = 'WT';
+  // ProTeams: team names from the ProTeams list page, squads from each team's article.
+  // Those linked from the World Tour page get automatic invitations to every WorldTour race.
+  if (!args.includes('--no-proteams')) {
+    const wtLinks = await api({ action: 'parse', page: `${SEASON} UCI World Tour`, prop: 'links', redirects: '1' });
+    const invited = new Set(((wtLinks && wtLinks.parse && wtLinks.parse.links) || []).map(l => l.title));
+    const pl = await api({ action: 'parse', page: `List of ${SEASON} UCI ProTeams and Continental teams`, prop: 'links', section: '1', redirects: '1' });
+    const names = ((pl && pl.parse && pl.parse.links) || []).filter(l => l.ns === 0 && l.exists !== false && !NAT_BY_NAME[norm(l.title)] && !/^(\d{4}|uci|union|part )/i.test(l.title)).map(l => l.title);
+    for (const title of names) {
+      const page = await wikitext(title);
+      const roster = page ? parseSquad(page.text) : [];
+      if (roster.length < 10) { console.log(`  skip ProTeam ${title}: no roster found`); continue; }
+      teams.push({ name: title.replace(/\s*\((cycling team|men's team)\)\s*$/i, ''), roster, updated: roster.updated, tier: 'PRO', autoInvite: invited.has(title) });
+    }
+    console.log(`Found ${teams.filter(t => t.tier === 'PRO').length} ProTeams (${teams.filter(t => t.autoInvite).length} with automatic invitations).`);
+  }
+  // a rider listed by two teams (a transfer one page hasn't caught up with) stays with the most recently updated roster
+  const owner = new Map();
+  for (const t of teams) for (const r of t.roster) {
+    const cur = owner.get(r.title);
+    if (!cur || (t.updated || 0) > (cur.updated || 0)) owner.set(r.title, t);
+  }
+  let dupes = 0;
+  for (const t of teams) { const n = t.roster.length; t.roster = t.roster.filter(r => owner.get(r.title) === t); dupes += n - t.roster.length; }
+  if (dupes) console.log(`Resolved ${dupes} riders listed by two teams.`);
   // rider pages, 50 per request
   const titles = [...new Set(teams.flatMap(t => t.roster.map(r => r.title)))];
   const info = new Map();
@@ -386,11 +444,14 @@ async function main() {
       riders.push({ name: display, first: parts[0], last: parts.slice(1).join(' ') || parts[0], nat: r.nat || 'UNK', born: born || `${SEASON - 27}-07-01`, type, level });
     }
     if (riders.length < 15) { console.log(`  skip ${t.name}: only ${riders.length} riders with cyclist pages`); continue; }
-    out.push({ id: teamId(t.name, used), name: t.name, ...teamStyle(t.name, riders), riders });
+    out.push({ id: teamId(t.name, used), name: t.name, tier: t.tier || 'WT', autoInvite: !!t.autoInvite, ...teamStyle(t.name, riders), riders });
   }
   // prestige from squad strength
   const strength = t => { const l = t.riders.map(r => r.level).sort((a, b) => b - a).slice(0, 10); return l.reduce((a, b) => a + b, 0) / l.length; };
-  out.sort((a, b) => strength(b) - strength(a)).forEach((t, i) => { t.prestige = i < 3 ? 5 : i < 7 ? 4 : i < 11 ? 3 : i < 15 ? 2 : 1; });
+  const wt = out.filter(t => t.tier !== 'PRO').sort((a, b) => strength(b) - strength(a));
+  wt.forEach((t, i) => { t.prestige = i < 3 ? 5 : i < 7 ? 4 : i < 11 ? 3 : i < 15 ? 2 : 1; });
+  for (const t of out) if (t.tier === 'PRO') t.prestige = t.autoInvite ? 2 : 1;
+  out.sort((a, b) => (a.tier === 'PRO') - (b.tier === 'PRO') || b.prestige - a.prestige || strength(b) - strength(a));
 
   const data = { season: SEASON, source: 'Wikipedia', built: new Date().toISOString().slice(0, 10), teams: out };
   fs.writeFileSync(OUT, `// Generated by tools/build-real-db.js on ${data.built} from English Wikipedia (CC BY-SA 4.0).\n` +
@@ -400,5 +461,5 @@ async function main() {
   for (const t of out) console.log(`  ${t.id.padEnd(4)} ${t.name.padEnd(34)} ${String(t.riders.length).padStart(2)} riders  ★${t.prestige}  top: ${t.riders.slice().sort((a, b) => b.level - a.level).slice(0, 3).map(r => r.name).join(', ')}`);
 }
 
-module.exports = { parseTeamList, parseSeed, assemble, parseRoster, parseRider, flagCode, typeFrom, estimateLevel, sections, links, loadNations, norm };
+module.exports = { parseSquad, parseTeamList, parseSeed, assemble, parseRoster, parseRider, flagCode, typeFrom, estimateLevel, sections, links, loadNations, norm };
 if (require.main === module) main().catch(e => { console.error('\n' + e.message); process.exit(1); });

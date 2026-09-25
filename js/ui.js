@@ -180,7 +180,7 @@ PCM.UI = (function () {
   function continueLabel() {
     if (G.fired) return 'Find a new job';
     const cr = Game.currentRace(G);
-    if (cr && cr.status !== 'done') return cr.status === 'running' ? 'Back to race' : 'Go to race';
+    if (cr && cr.status !== 'done' && Game.isInvited(G, cr, G.playerTeamId)) return cr.status === 'running' ? 'Back to race' : 'Go to race';
     if (G.week > W) return 'End season';
     return 'Continue ▸';
   }
@@ -202,7 +202,7 @@ PCM.UI = (function () {
     ['transfers', 'Transfers'], ['finances', 'Finances'], ['club', 'Club'], ['options', 'Game']];
   function nav() {
     const cr = Game.currentRace(G);
-    const pending = cr && cr.status !== 'done';
+    const pending = cr && cr.status !== 'done' && Game.isInvited(G, cr, G.playerTeamId);
     return `<nav class="nav">${NAV.map(([k, l]) => `<button class="${S.view === k ? 'on' : ''}" data-act="nav" data-view="${k}">${l}${k === 'race' && pending ? '<span class="dot"></span>' : ''}</button>`).join('')}</nav>`;
   }
 
@@ -244,13 +244,15 @@ PCM.UI = (function () {
         <button class="btn sm ${real ? '' : 'primary'}" data-act="world" data-w="fictional">Fictional world</button>
         <button class="btn sm ${real ? 'primary' : ''}" data-act="world" data-w="real" ${Game.realAvailable() ? '' : 'disabled'}>Real peloton ${Game.realAvailable() ? PCM.REAL.season : ''}</button>
         <span class="small muted">${Game.realAvailable() ? (real ? `Real riders and races. ${PCM.REAL.teams.reduce((n, t) => n + t.riders.length, 0)} riders from ${h(PCM.REAL.source || 'public data')}; ratings are estimates.` : 'Generated riders, teams and races.') : 'Real peloton not installed: run <code>npm run build:real</code>.'}</span></div>`;
-    const cards = Game.teamDefs(real ? 'real' : 'fictional').map(t => `<button class="teamcard ${S.newTeam === t.id ? 'on' : ''}" data-act="pickteam" data-id="${t.id}">
+    const defs = Game.teamDefs(real ? 'real' : 'fictional');
+    const card = t => `<button class="teamcard ${S.newTeam === t.id ? 'on' : ''}" data-act="pickteam" data-id="${t.id}">
         <div class="kit" style="background:linear-gradient(90deg, ${t.c1} 70%, ${t.c2} 70%)"></div>
         <h3>${h(t.name)}</h3>
         <div class="row between small"><span>${flag(t.nat)} ${h(DATA.natName(t.nat))}</span>${stars(60 + t.prestige * 5)}</div>
         ${t.riders ? `<div class="small muted">Leaders: ${h(t.riders.slice().sort((a, b) => b.level - a.level).slice(0, 2).map(x => x.last).join(', '))}</div>` : ''}
+        ${t.tier === 'PRO' ? `<div class="row small"><span class="pill">ProTeam</span>${t.autoInvite ? '<span class="pill good">Invited to every race</span>' : '<span class="pill warn">Needs wildcards</span>'}</div>` : ''}
         <div class="small muted">${['Underdog wildcard squad', 'Small budget, big ambitions', 'Solid mid-table WorldTour team', 'Contender with star riders', 'Superteam: win everything'][t.prestige - 1]}</div>
-      </button>`).join('');
+      </button>`;
     return `<div class="intro">
       <div class="stack">
         <div class="label">Pro cycling team manager</div>
@@ -261,7 +263,9 @@ PCM.UI = (function () {
       <div class="panel">
         <header><h2>Choose your team</h2><span class="muted small">Stars show the team's standing. Bigger teams have deeper squads and tougher board objectives.</span></header>
         ${worldPick}
-        <div class="teamcards">${cards}</div>
+        ${defs.some(t => t.tier === 'PRO') ? `<h3>WorldTeams</h3><div class="teamcards">${defs.filter(t => t.tier !== 'PRO').map(card).join('')}</div>
+          <h3>ProTeams</h3><p class="small muted">Second-division teams. The top three ride every race; the others need wildcard invitations, which favour races in their home country.</p>
+          <div class="teamcards">${defs.filter(t => t.tier === 'PRO').map(card).join('')}</div>` : `<div class="teamcards">${defs.map(card).join('')}</div>`}
         <div class="row">
           <div class="field"><label class="label" for="mgr">Your name</label><input type="text" id="mgr" maxlength="30" value="${h(S.mgr || '')}" placeholder="Manager"></div>
           <div class="field"><label class="label" for="cname">Rename team (optional)</label><input type="text" id="cname" maxlength="40" value="${h(S.cname || '')}" placeholder="Keep original name"></div>
@@ -282,10 +286,11 @@ PCM.UI = (function () {
     let nextPanel;
     if (nr) {
       const now = nr.week <= G.week;
-      nextPanel = `<div class="panel"><header><h3>${now ? 'This week' : 'Next race'}</h3>${clsPill(nr.cls)}</header>
+      const inv = Game.isInvited(G, nr, G.playerTeamId);
+      nextPanel = `<div class="panel"><header><h3>${now ? 'This week' : 'Next race'}</h3><span>${inv ? '' : '<span class="pill warn">Not invited</span> '}${clsPill(nr.cls)}</span></header>
         <div><h2>${flag(nr.country)} ${h(nr.name)}</h2><div class="muted small">Week ${nr.week}${nr.weeks > 1 ? '–' + (nr.week + nr.weeks - 1) : ''} · ${nr.kind === 'oneday' ? 'One-day race, ' + nr.stages[0].km + ' km' : nr.stages.length + ' stages'}</div></div>
         <div class="row">${nr.stages.slice(0, 21).map(s => `<div class="mini" title="Stage ${s.n}: ${TYPE_LABEL[s.type]} ${s.km} km">${profileSVG(s, { mini: true, w: 120, h: 28 })}</div>`).join('')}</div>
-        <div class="row">${now ? `<button class="btn primary" data-act="nav" data-view="race">Open race</button>` : `<span class="muted small">${nr.week - G.week} week(s) away</span>`}<button class="btn" data-act="nav" data-view="calendar">Calendar</button></div></div>`;
+        <div class="row">${now && inv ? `<button class="btn primary" data-act="nav" data-view="race">Open race</button>` : `<span class="muted small">${nr.week - G.week} week(s) away</span>`}<button class="btn" data-act="nav" data-view="calendar">Calendar</button></div></div>`;
     } else {
       nextPanel = `<div class="panel"><h3>Season complete</h3><p>All races are done. Press <b>End season</b> to review the year and move on.</p></div>`;
     }
@@ -371,6 +376,13 @@ PCM.UI = (function () {
       return `<div class="pagehead"><div><div class="label">Race</div><h1>No race this week</h1></div></div>
         <div class="panel"><p>${nr ? `Next up: <b>${h(nr.name)}</b> in week ${nr.week}. Press <b>Continue</b> to move to the next week.` : 'The season is over.'}</p>
         <div class="row"><button class="btn primary" data-act="tonextrace">Skip to next race week ▸▸</button></div></div>`;
+    }
+    if (!Game.isInvited(G, race, G.playerTeamId) && race.status !== 'done') {
+      const pros = (race.invited || []).map(id => G.teams[id]).filter(t => t.tier === 'PRO');
+      return `<div class="pagehead"><div><div class="label">${clsPill(race.cls)} · Week ${race.week}</div><h1>${flag(race.country)} ${h(race.name)}</h1></div></div>
+        <div class="panel"><header><h3>We weren't invited</h3><span class="pill warn">No wildcard</span></header>
+        <p>${h(race.name)} runs without us this week. Our riders keep training. Press <b>Continue</b> to move on.</p>
+        <p class="small muted">Invited ProTeams: ${pros.map(t => h(t.name)).join(', ') || 'none'}. Finish as one of the top three ProTeams to be invited to every race next season.</p></div>`;
     }
     if (race.status === 'upcoming') return preRaceView(race);
     return runningRaceView(race);
@@ -565,6 +577,7 @@ PCM.UI = (function () {
 
   // ---------- calendar ----------
   function bestOurs(race) {
+    if (!Game.isInvited(G, race, G.playerTeamId)) return '<span class="pill warn">Not invited</span>';
     if (race.status !== 'done' || !race.final) return '';
     const ids = new Set((race.entrants || []).map(x => x[0]));
     const idx = race.final.gc.findIndex(([id]) => ids.has(id));
@@ -597,7 +610,7 @@ PCM.UI = (function () {
     let body = '';
     if (tab === 'teams') {
       body = `<div class="tablewrap"><table><thead><tr><th>#</th><th>Team</th><th class="r">UCI pts</th><th class="r">Wins</th><th class="r">Riders</th><th class="r">Strength</th><th class="r">Expected</th></tr></thead><tbody>
-        ${Game.teamRanking(G).map((t, i) => `<tr class="${t.id === G.playerTeamId ? 'mine' : ''}"><td class="pos">${i + 1}</td><td>${jersey(t).replace('class="jersey"', 'class="jersey" style="display:inline-block;vertical-align:-3px;margin-right:6px"')}${h(t.name)}</td><td class="r">${t.season.pts}</td><td class="r">${t.season.wins}</td><td class="r">${t.riders.length}</td><td class="r">${Game.teamStrength(G, t).toFixed(1)}</td><td class="r">${U.ordinal(t.expRank)}</td></tr>`).join('')}
+        ${Game.teamRanking(G).map((t, i) => `<tr class="${t.id === G.playerTeamId ? 'mine' : ''}"><td class="pos">${i + 1}</td><td>${jersey(t).replace('class="jersey"', 'class="jersey" style="display:inline-block;vertical-align:-3px;margin-right:6px"')}${h(t.name)}${t.tier === 'PRO' ? ' <span class="pill">ProTeam</span>' : ''}</td><td class="r">${t.season.pts}</td><td class="r">${t.season.wins}</td><td class="r">${t.riders.length}</td><td class="r">${Game.teamStrength(G, t).toFixed(1)}</td><td class="r">${U.ordinal(t.expRank)}</td></tr>`).join('')}
       </tbody></table></div>`;
     } else if (tab === 'riders') {
       const list = Game.riderRanking(G);
@@ -819,9 +832,10 @@ PCM.UI = (function () {
   function onContinue() {
     if (G.fired) { S.modal = { type: 'jobs' }; render(); return; }
     const cr = Game.currentRace(G);
-    if (cr && cr.status !== 'done') { S.view = 'race'; render(); return; }
+    if (cr && cr.status !== 'done' && Game.isInvited(G, cr, G.playerTeamId)) { S.view = 'race'; render(); return; }
     if (G.week > W) { S.modal = { type: 'confirmEnd' }; render(); return; }
     const res = Game.advance(G);
+    if (res.skipped) toast(`We weren't invited to ${res.skipped.name}. ${G.riders[res.skipped.winner] ? Riders.fullName(G.riders[res.skipped.winner]) + ' won.' : ''}`);
     S.stageView = null;
     if (res.status === 'race') { S.view = 'race'; S.raceTab = 'stage'; S.tactic = 'bal'; toast('Race week: ' + res.race.name); }
     else if (res.status === 'season-end') toast('All races done. Press End season when ready.');
@@ -831,7 +845,7 @@ PCM.UI = (function () {
     let guard = 0;
     while (guard++ < 60) {
       const cr = Game.currentRace(G);
-      if ((cr && cr.status !== 'done') || G.week > W) break;
+      if ((cr && cr.status !== 'done' && Game.isInvited(G, cr, G.playerTeamId)) || G.week > W) break;
       Game.advance(G);
     }
     S.view = 'race'; S.raceTab = 'stage'; S.stageView = null;

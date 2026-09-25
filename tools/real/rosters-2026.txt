@@ -1,6 +1,6 @@
-# 2026 WorldTeam rosters, from English Wikipedia "List of 2026 UCI WorldTeams and riders" (CC BY-SA 4.0), fetched 2026-09-25.
+# 2026 rosters from English Wikipedia (CC BY-SA 4.0), fetched 2026-09-25: "List of 2026 UCI WorldTeams and riders" and each ProTeam's article.
 # Used offline by: npm run build:real. Refresh from Wikipedia with: npm run build:real:wiki
-# Format: "## Team name" then: Name | NAT (IOC) | birth year | type. Types come from Wikipedia rider types or ratings.csv.
+# Format: "## Team name [ProTeam, auto-invite]" then: Name | NAT (IOC) | birth year | type.
 
 ## Alpecin–Premier Tech
 Maurice Ballerstedt | GER | 2001 | rouleur
@@ -558,3 +558,408 @@ Diego Ulissi | ITA | 1989 | puncheur
 Darren van Bekkum | NED | 2002 | climber
 Simone Velasco | ITA | 1995 | puncheur
 Nicolas Vinokurov | KAZ | 2002 | puncheur
+
+## Bardiani–CSF 7 Saber [ProTeam]
+Federico Biagini | ITA | 2003 | rouleur
+Filippo Cettolin | ITA | 2006 | rouleur
+Luca Colnaghi | ITA | 1999 | rouleur
+Lorenzo Conforti | ITA | 2004 | rouleur
+Luca Covili | ITA | 1997 | rouleur
+Edward Cruz | COL | 2006 | rouleur
+Santiago Ferraro | ITA | 2006 | rouleur
+Martin Santiago Herreño | COL | 2006 | rouleur
+Filippo Magli | ITA | 1999 | rouleur
+Martin Marcellusi | ITA | 2000 | rouleur
+Alessio Martinelli | ITA | 2001 | rouleur
+Andrea Montagner | ITA | 2006 | rouleur
+Luca Paletti | ITA | 2004 | climber
+Mattia Pinazzi | ITA | 2001 | rouleur
+Vicente Rojas | CHI | 2002 | rouleur
+Matteo Scalco | ITA | 2004 | rouleur
+Manuele Tarozzi | ITA | 1998 | climber
+Alex Tolio | ITA | 2000 | climber
+Filippo Turconi | ITA | 2005 | rouleur
+Enrico Zanoncello | ITA | 1997 | rouleur
+Mattia Stenico | ITA | 2006 | rouleur
+
+## Burgos Burpellet BH [ProTeam]
+Clément Alleno | FRA | 2000 | puncheur
+Rodrigo Álvarez | ESP | 1999 | rouleur
+Antonio Angulo | ESP | 1994 | climber
+Mario Aparicio | ESP | 2000 | rouleur
+Georgios Bouglas | GRE | 1990 | sprinter
+Josh Burnett | NZL | 2000 | rouleur
+Daniel Cavia | ESP | 2002 | rouleur
+Sergio Chumil | GUA | 2000 | climber
+Hugo de la Calle | ESP | 2004 | rouleur
+David Delgado | ESP | 2000 | rouleur
+José Manuel Díaz | ESP | 1995 | climber
+Eric Fagúndez | URU | 1998 | tt
+José Luis Faura | ESP | 2000 | rouleur
+Sinuhé Fernández | ESP | 2000 | climber
+Ángel Fuentes | ESP | 1996 | rouleur
+Carlos García Pierna | ESP | 1999 | climber
+George Jackson | NZL | 2000 | rouleur
+Vojtěch Kmínek | CZE | 2000 | rouleur
+Tomoya Koyama | JPN | 1998 | rouleur
+Merhawi Kudus | ERI | 1994 | climber
+David Martín | ESP | 1999 | rouleur
+Alexandre Mayer | MRI | 1998 | rouleur
+Ander Okamika | ESP | 1993 | rouleur
+Jambaljamts Sainbayar | MGL | 1996 | rouleur
+
+## Caja Rural–Seguros RGA [ProTeam]
+Julen Arriola-Bengoa | ESP | 2001 | rouleur
+Abel Balderstone | ESP | 2000 | tt
+Fernando Barceló | ESP | 1996 | rouleur
+Sebastian Berwick | AUS | 1999 | rouleur
+Joan Bou | ESP | 1997 | rouleur
+Jan Castellon | ESP | 2003 | climber
+Gorka Corres | ESP | 2005 | rouleur
+Sergi Darder | ESP | 2003 | rouleur
+Álex Díaz | ESP | 2001 | rouleur
+Samuel Fernández | ESP | 2003 | rouleur
+Fernando Gaviria | COL | 1994 | sprinter
+Jaume Guardeño | ESP | 2003 | climber
+Javier Ibañez | ESP | 2001 | rouleur
+Ellane Larronde | FRA | 2006 | rouleur
+Iúri Leitão | POR | 1998 | rouleur
+Joseba López | ESP | 2000 | rouleur
+Pablo Lospitao | ESP | 2005 | rouleur
+Alex Molenaar | NED | 1999 | rouleur
+Joel Nicolau | ESP | 1997 | climber
+Stefano Oldani | ITA | 1998 | rouleur
+Jakub Otruba | CZE | 1998 | rouleur
+José Félix Parra | ESP | 1997 | climber
+Francisco Joel Peñuela | VEN | 2001 | rouleur
+Eduard Prades | ESP | 1987 | puncheur
+Gorka Sorarrain | ESP | 1996 | rouleur
+Iker Villar | ESP | 2006 | rouleur
+
+## Cofidis [ProTeam, auto-invite]
+Piet Allegaert | BEL | 1995 | rouleur
+Stanisław Aniołkowski | POL | 1997 | sprinter
+Alex Aranburu | ESP | 1995 | puncheur
+Jenthe Biermans | BEL | 1995 | rouleur
+Emanuel Buchmann | GER | 1992 | climber
+Simon Carr | GBR | 1998 | climber
+Camille Charret | FRA | 2006 | rouleur
+Bryan Coquard | FRA | 1992 | sprinter
+Nicolas Debeaumarché | FRA | 1998 | rouleur
+Valentin Ferron | FRA | 1998 | rouleur
+Milan Fretin | BEL | 2001 | sprinter
+Ion Izagirre | ESP | 1989 | gc
+Clément Izquierdo | FRA | 2002 | rouleur
+Yaël Joalland | FRA | 2000 | climber
+Alex Kirsch | LUX | 1992 | rouleur
+Oliver Knight | GBR | 2001 | tt
+Jan Maas | NED | 1996 | rouleur
+Sam Maisonobe | FRA | 2003 | rouleur
+Jamie Meehan | IRL | 2003 | rouleur
+Sylvain Moniquet | BEL | 1998 | rouleur
+Paul Ourselin | FRA | 1994 | rouleur
+Hugo Page | FRA | 2001 | rouleur
+Alexis Renard | FRA | 1999 | rouleur
+Ludovic Robeet | BEL | 1994 | rouleur
+Louis Rouland | FRA | 2002 | rouleur
+Sergio Samitier | ESP | 1995 | climber
+Dylan Teuns | BEL | 1992 | puncheur
+Benjamin Thomas | FRA | 1995 | rouleur
+Damien Touzé | FRA | 1996 | rouleur
+Edoardo Zamperini | ITA | 2003 | rouleur
+
+## Equipo Kern Pharma [ProTeam]
+Ibai Azanza | ESP | 2004 | rouleur
+Hugo Aznar | ESP | 2003 | rouleur
+Unai Aznar | ESP | 2002 | rouleur
+Urko Berrade | ESP | 1997 | rouleur
+Marc Brustenga | ESP | 1999 | rouleur
+Pablo Carrascosa | ESP | 2002 | rouleur
+Iván Cobo | ESP | 2000 | climber
+Iñigo Elosegui | ESP | 1998 | rouleur
+Miguel Ángel Fernández | ESP | 1997 | sprinter
+Kiko Galván | ESP | 1997 | rouleur
+Nil Gimeno | ESP | 2004 | rouleur
+Jorge Gutiérrez | ESP | 2002 | climber
+Unai Iribar | ESP | 1999 | rouleur
+Mikel Retegi | ESP | 2001 | rouleur
+Ibon Ruiz | ESP | 1999 | climber
+Iván Sosa | COL | 1997 | climber
+Antonio Jesús Soto | ESP | 1994 | rouleur
+Diego Uriarte | ESP | 2001 | rouleur
+Mats Wenzel | LUX | 2002 | rouleur
+
+## Euskaltel–Euskadi [ProTeam]
+Jon Aberasturi | ESP | 1989 | sprinter
+Jon Agirre | ESP | 1997 | climber
+Nicolás Alustiza | ESP | 2003 | rouleur
+Xabier Berasategi | ESP | 2000 | rouleur
+Mikel Bizkarra | ESP | 1989 | climber
+Iker Bonillo | ESP | 2003 | rouleur
+Víctor de la Parte | ESP | 1986 | rouleur
+David Dekker | NED | 1998 | sprinter
+Márton Dina | HUN | 1996 | climber
+Ander Ganzábal | ESP | 2000 | rouleur
+Paul Hennequin | FRA | 2002 | rouleur
+Xabier Isasa | ESP | 2001 | rouleur
+Txomin Juaristi | ESP | 1995 | rouleur
+Andoni López de Abetxuko | ESP | 1999 | rouleur
+Jordi López | ESP | 1998 | rouleur
+Gotzon Martín | ESP | 1996 | rouleur
+Iker Mintegui | ESP | 2002 | rouleur
+Jokin Murguialday | ESP | 2000 | rouleur
+Louis Sutton | GBR | 2002 | rouleur
+Danny van der Tuuk | POL | 1999 | rouleur
+Unai Zubeldia | ESP | 2003 | rouleur
+
+## MBH Bank CSB Telecom Fort [ProTeam]
+Matteo Ambrosini | ITA | 2002 | rouleur
+Christian Bagatin | ITA | 2002 | rouleur
+Davide Boscaro | ITA | 2000 | rouleur
+Diego Bracalente | ITA | 2004 | rouleur
+Gabriele Casalini | ITA | 2004 | rouleur
+Edoardo Cipollini | ITA | 2005 | rouleur
+Zoltán Antal Lepold | HUN | 2003 | rouleur
+Lorenzo Masciarelli | ITA | 2003 | rouleur
+Angelo Monister | ITA | 2005 | rouleur
+Lorenzo Nespoli | ITA | 2004 | rouleur
+Bálint Orosz | HUN | 2003 | rouleur
+Samuel Quaranta | ITA | 2002 | rouleur
+Márk Valent | HUN | 2004 | rouleur
+Leonardo Vesco | ITA | 2005 | rouleur
+Leonardo Volpato | ITA | 2004 | rouleur
+
+## Modern Adventure Pro Cycling [ProTeam]
+Sam Boardman | USA | 1995 | rouleur
+Robin Carpenter | USA | 1992 | rouleur
+Ezra Caudell | USA | 2006 | rouleur
+Sean Christian | USA | 2002 | rouleur
+Stefan de Bod | RSA | 1996 | rouleur
+Samuel Flórez | COL | 2005 | rouleur
+Kieran Haug | USA | 2002 | rouleur
+Leo Hayter | GBR | 2001 | rouleur
+Cole Kessler | USA | 2003 | rouleur
+Harry Lasker | USA | 2007 | rouleur
+Ian López | USA | 2003 | rouleur
+Brody McDonald | USA | 2002 | rouleur
+Scott McGill | USA | 1998 | rouleur
+Byron Munton | RSA | 1998 | rouleur
+Ben Oliver | NZL | 1996 | rouleur
+Riley Pickrell | CAN | 2001 | rouleur
+Hugo Scala Jr | USA | 1997 | rouleur
+Mark Stewart | GBR | 1995 | rouleur
+Tyler Stites | USA | 1998 | rouleur
+Lucas Towers | GBR | 2003 | rouleur
+Paul Wright | NZL | 1998 | rouleur
+
+## Pinarello–Q36.5 Pro Cycling Team [ProTeam, auto-invite]
+Xabier Azparren | ESP | 1999 | rouleur
+Matteo Badilatti | SUI | 1992 | rouleur
+Sjoerd Bax | NED | 1996 | rouleur
+Sam Bennett | IRE | 1990 | sprinter
+Walter Calzoni | ITA | 2001 | rouleur
+Marcel Camprubi | ESP | 2001 | rouleur
+Fabio Christen | SUI | 2002 | rouleur
+David de la Cruz | ESP | 1989 | rouleur
+Aimé De Gendt | BEL | 1994 | rouleur
+Mark Donovan | GBR | 1999 | rouleur
+Eddie Dunbar | IRE | 1996 | climber
+Frederik Frison | BEL | 1992 | rouleur
+Thomas Gloag | GBR | 2001 | rouleur
+David González | ESP | 1996 | rouleur
+Chris Harper | AUS | 1994 | climber
+Quinten Hermans | BEL | 1995 | rouleur
+Emmanuel Houcou | FRA | 2003 | rouleur
+Damien Howson | AUS | 1992 | rouleur
+Emīls Liepiņš | LAT | 1992 | rouleur
+Kamil Małecki | POL | 1996 | rouleur
+Xandro Meurisse | BEL | 1992 | rouleur
+Matteo Moschetti | ITA | 1996 | rouleur
+Nicolò Parisini | ITA | 2000 | rouleur
+Joe Pidcock | GBR | 2002 | rouleur
+Tom Pidcock | GBR | 1999 | puncheur
+Milan Vader | NED | 1996 | rouleur
+Brent Van Moer | BEL | 1998 | rouleur
+Harm Vanhoucke | BEL | 1997 | rouleur
+Fred Wright | GBR | 1999 | cobbles
+Nickolas Zukowsky | CAN | 1998 | rouleur
+
+## Solution Tech NIPPO Rali [ProTeam]
+Yukiya Arashiro | JPN | 1984 | rouleur
+Davide Baldaccini | ITA | 1998 | rouleur
+Alexandre Balmer | SUI | 2000 | rouleur
+Valerio Conti | ITA | 1993 | rouleur
+Đorđe Đurić | SRB | 2000 | rouleur
+Filippo Fortin | ITA | 1989 | rouleur
+Roberto González | PAN | 1994 | rouleur
+Alessandro Iacchi | ITA | 1999 | rouleur
+Felix James Meo | NZL | 1997 | rouleur
+Tommaso Nencini | ITA | 2000 | rouleur
+Andrea Piras | ITA | 2002 | rouleur
+Lorenzo Quartucci | ITA | 1999 | rouleur
+Dušan Rajović | SRB | 1997 | rouleur
+Joann Rolando | ITA | 2006 | rouleur
+Carlos Samudio | PAN | 1997 | rouleur
+Kristian Sbaragli | ITA | 1990 | rouleur
+Arnaud Tissières | SUI | 1996 | rouleur
+Kyrylo Tsarenko | UKR | 2000 | rouleur
+Luca Verrando | ITA | 2002 | rouleur
+Attilio Viviani | ITA | 1996 | rouleur
+
+## Team Flanders–Baloise [ProTeam]
+Tom Crabbe | BEL | 2005 | rouleur
+Brem Deman | BEL | 2002 | rouleur
+Tuur Dens | BEL | 2000 | rouleur
+Siebe Deweirdt | BEL | 2002 | rouleur
+Ferre Geeraerts | BEL | 2003 | rouleur
+Jules Hesters | BEL | 1998 | rouleur
+Nolan Huysmans | BEL | 2006 | rouleur
+Michiel Lambrecht | BEL | 2003 | rouleur
+Milan Lanhove | BEL | 2003 | rouleur
+Elias Maris | BEL | 1999 | rouleur
+Senne Thonnon | BEL | 2003 | rouleur
+Artuur Torney | BEL | 2003 | rouleur
+Milan Van den Haute | BEL | 2005 | rouleur
+Leander Van Hautegem | BEL | 2003 | rouleur
+Vincent Van Hemelen | BEL | 2000 | rouleur
+Henri Vandenabeele | BEL | 2000 | rouleur
+Noah Vandenbranden | BEL | 2002 | rouleur
+Dylan Vandenstorme | BEL | 2002 | rouleur
+Ward Vanhoof | BEL | 1999 | rouleur
+Victor Vercouillie | BEL | 2002 | rouleur
+
+## Team Novo Nordisk [ProTeam]
+Hamish Beadle | NZL | 1998 | rouleur
+Sam Brand | GBR | 1991 | rouleur
+Hamish Armitt | GBR | 2002 | rouleur
+Lucas Dauge | FRA | 1996 | rouleur
+Quinten De Graeve | BEL | 2000 | rouleur
+Jacopo Colladon | ITA | 2003 | rouleur
+Bailey McDonald | AUS | 2003 | rouleur
+Declan Irvine | AUS | 1999 | rouleur
+Anton Muller | FRA | 1998 | rouleur
+David Lozano | ESP | 1988 | rouleur
+Doriand Percrule | FRA | 1999 | rouleur
+Andrea Peron | ITA | 1988 | rouleur
+Alessandro Perracchione | ITA | 2005 | rouleur
+Logan Phippen | USA | 1992 | rouleur
+Celestin Wattelle | FRA | 1993 | rouleur
+Antonio Polga | ITA | 1999 | rouleur
+Umberto Poli | ITA | 1996 | rouleur
+Filippo Ridolfo | ITA | 2001 | rouleur
+Nathan Smith | GBR | 2000 | rouleur
+
+## Team Polti VisitMalta [ProTeam]
+Davide Bais | ITA | 1998 | rouleur
+Mattia Bais | ITA | 1996 | rouleur
+Aidan Buttigieg | MLT | 1997 | rouleur
+Ludovico Crescioli | ITA | 2003 | rouleur
+Davide De Cassan | ITA | 2002 | rouleur
+Pablo García | ESP | 2001 | rouleur
+Germán Darío Gómez | COL | 2001 | rouleur
+Giovanni Lonardi | ITA | 1996 | rouleur
+Mirco Maestri | ITA | 1991 | rouleur
+Álex Martín | ESP | 2000 | rouleur
+Francisco Muñoz | ESP | 2001 | rouleur
+Manuel Peñalver | ESP | 1998 | rouleur
+Andrea Pietrobon | ITA | 1999 | rouleur
+Gabriele Raccagni | ITA | 2003 | rouleur
+Javier Serrano | ESP | 2001 | rouleur
+Diego Pablo Sevilla | ESP | 1996 | rouleur
+Fernando Tercero | ESP | 2001 | rouleur
+Alessandro Tonelli | ITA | 1992 | rouleur
+Samuele Zoccarato | ITA | 1998 | rouleur
+
+## Team TotalEnergies [ProTeam]
+Thomas Bonnet | FRA | 1998 | rouleur
+Geoffrey Bouchard | FRA | 1992 | rouleur
+Rayan Boulahoite | FRA | 2004 | rouleur
+Nicolas Breuillard | FRA | 2000 | rouleur
+Alexys Brunel | FRA | 1998 | rouleur
+Mathieu Burgaudeau | FRA | 1998 | rouleur
+Florian Dauphin | FRA | 1999 | rouleur
+Joris Delbove | FRA | 2000 | rouleur
+Alexandre Delettre | FRA | 1997 | rouleur
+Fabien Doubey | FRA | 1993 | rouleur
+Sandy Dujardin | FRA | 1997 | rouleur
+Thomas Gachignard | FRA | 2000 | rouleur
+Fabien Grellier | FRA | 1994 | rouleur
+Thibault Guernalec | FRA | 1997 | rouleur
+Emilien Jeannière | FRA | 1998 | rouleur
+Jordan Jegat | FRA | 1999 | rouleur
+Alan Jousseaume | FRA | 1998 | rouleur
+Mathis Le Berre | FRA | 2001 | rouleur
+Samuel Leroux | FRA | 1994 | rouleur
+Théo Lévêque | FRA | 2004 | rouleur
+Lorrenzo Manzin | FRA | 1994 | rouleur
+Nicola Marcerou | FRA | 2002 | rouleur
+Valentin Retailleau | FRA | 2000 | rouleur
+Jason Tesson | FRA | 1998 | rouleur
+Pierre Thierry | FRA | 2003 | rouleur
+Anthony Turgis | FRA | 1994 | rouleur
+Baptiste Vadic | FRA | 2002 | rouleur
+Mattéo Vercher | FRA | 2001 | rouleur
+
+## Tudor Pro Cycling Team [ProTeam, auto-invite]
+Julian Alaphilippe | FRA | 1992 | puncheur
+Will Barta | USA | 1996 | rouleur
+Marco Brenner | GER | 2002 | rouleur
+Arvid de Kleijn | NED | 1994 | sprinter
+Robin Donzé | SUI | 2003 | rouleur
+Jacob Eriksson | SWE | 1999 | rouleur
+Robin Froidevaux | SUI | 1998 | rouleur
+Marco Haller | AUT | 1991 | rouleur
+Marc Hirschi | SUI | 1998 | puncheur
+Petr Kelemen | CZE | 2000 | rouleur
+Arthur Kluckers | LUX | 2000 | rouleur
+Sebastian Kolze Changizi | DEN | 2000 | rouleur
+Stefan Küng | SUI | 1993 | tt
+Fabian Lienhard | SUI | 1993 | rouleur
+Marius Mayrhofer | GER | 2000 | rouleur
+Aivaras Mikutis | LIT | 2002 | rouleur
+Luca Mozzato | ITA | 1998 | rouleur
+Rick Pluimers | NED | 2000 | rouleur
+Mathys Rondel | FRA | 2003 | rouleur
+Michael Storer | AUS | 1997 | gc
+Florian Stork | GER | 1997 | rouleur
+Joel Suter | SUI | 1998 | rouleur
+Roland Thalmann | SUI | 1993 | rouleur
+Matteo Trentin | ITA | 1989 | cobbles
+Yannis Voisard | SUI | 1998 | rouleur
+Larry Warbasse | USA | 1990 | rouleur
+Fabian Weiss | SUI | 2002 | rouleur
+Hannes Wilksch | GER | 2001 | rouleur
+Luc Wirtgen | LUX | 1998 | rouleur
+Maikel Zijlaard | NED | 1999 | rouleur
+
+## Unibet Rose Rockets [ProTeam]
+Ronan Augé | FRA | 2004 | rouleur
+Joren Bloem | NED | 1999 | rouleur
+Cedrik Bakke Christophersen | NOR | 2001 | rouleur
+Hartthijs de Vries | NED | 1996 | rouleur
+Odd Christian Eiking | NOR | 1994 | rouleur
+Karsten Larsen Feldmann | NOR | 2003 | rouleur
+Eivind Broholt Fougner | NOR | 2003 | rouleur
+Owen Geleijn | NED | 2001 | rouleur
+Dylan Groenewegen | NED | 1993 | sprinter
+Jelle Johannink | NED | 1996 | rouleur
+Tomáš Kopecký | CZE | 2000 | rouleur
+Matyáš Kopecký | CZE | 2003 | rouleur
+Lukáš Kubiš | SVK | 2000 | rouleur
+Victor Lafay | FRA | 1996 | puncheur
+Niklas Larsen | DNK | 1997 | rouleur
+Lander Loockx | BEL | 1997 | rouleur
+Adrien Maire | FRA | 2000 | rouleur
+Sergio Meris | ITA | 2001 | rouleur
+Wessel Mouris | NED | 2002 | rouleur
+Tobias Müller | GER | 2004 | rouleur
+Jannis Peter | GER | 2000 | rouleur
+Wout Poels | NED | 1987 | climber
+Elmar Reinders | NED | 1992 | rouleur
+Martijn Rasenberg | NED | 2001 | rouleur
+Colin Savioz | FRA | 2004 | rouleur
+Abram Stockman | BEL | 1996 | rouleur
+Adam Ťoupalík | CZE | 1996 | rouleur
+Rory Townsend | IRL | 1995 | rouleur
+Clément Venturini | FRA | 1993 | rouleur
+Killian Verschuren | FRA | 2002 | rouleur
