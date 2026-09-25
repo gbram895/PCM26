@@ -204,7 +204,7 @@ PCM.UI = (function () {
       <button class="btn go" data-act="continue">${continueLabel()}</button>
     </header>`;
   }
-  const NAV = [['dashboard', 'Home'], ['squad', 'Squad'], ['race', 'Race'], ['calendar', 'Calendar'], ['standings', 'Standings'],
+  const NAV = [['dashboard', 'Home'], ['squad', 'Squad'], ['planning', 'Planning'], ['race', 'Race'], ['calendar', 'Calendar'], ['standings', 'Standings'],
     ['transfers', 'Transfers'], ['finances', 'Finances'], ['club', 'Club'], ['options', 'Game']];
   function nav() {
     const cr = Game.currentRace(G);
@@ -233,6 +233,7 @@ PCM.UI = (function () {
   function viewHtml() {
     switch (S.view) {
       case 'squad': return squadView();
+      case 'planning': return planningView();
       case 'race': return raceView();
       case 'calendar': return calendarView();
       case 'standings': return standingsView();
@@ -370,11 +371,68 @@ PCM.UI = (function () {
       </div>`;
   }
 
+  // ---------- planning: race programme, peaks, training camps ----------
+  function planningView() {
+    const t = me();
+    const races = G.calendar;
+    const riders = t.riders.map(id => G.riders[id]).sort((a, b) => Riders.ovr(b) - Riders.ovr(a));
+    const short = r => r.name.replace(/^(Tour|Tour de|Tour of|La|Il|Giro|Volta|Vuelta|Grand Prix Cycliste de|Critérium des|Clásica)\s+/i, '').slice(0, 9);
+    const head = races.map(r => `<th class="c pl-race ${Game.isInvited(G, r, t.id) ? '' : 'muted'}" title="${h(r.name)} · week ${r.week}${r.goal ? ' · objective: ' + h(r.goal.text) : ''}"><div class="vert">${h(short(r))}</div><div class="small">${r.week}</div></th>`).join('');
+    const rows = riders.map(r => {
+      const prog = r.program || [], peaks = r.peaks || [];
+      const days = races.filter(x => prog.includes(x.tplId)).reduce((n, x) => n + Game.raceDays(x), 0);
+      return `<tr><td>${rLink(r)}</td><td>${spec(r)}</td><td class="r num ${days > 75 ? 'bad-t' : ''}">${days}</td>
+        ${races.map(x => {
+          const inv = Game.isInvited(G, x, t.id);
+          const state = peaks.includes(x.tplId) ? 'peak' : prog.includes(x.tplId) ? 'on' : '';
+          const camp = (G.camps || []).some(c => c.week >= x.week && c.week < x.week + x.weeks && c.rids.includes(r.id));
+          return `<td class="c pl-cell ${state} ${x.status === 'done' ? 'past' : ''}">${inv && x.status !== 'done' ? `<button class="pl-btn" data-act="plantoggle" data-id="${r.id}" data-race="${x.tplId}" aria-label="${h(Riders.fullName(r))} in ${h(x.name)}">${state === 'peak' ? '★' : state === 'on' ? '✓' : camp ? '⛺' : ''}</button>` : x.status === 'done' ? '·' : ''}</td>`;
+        }).join('')}</tr>`;
+    }).join('');
+    const counts = races.map(x => {
+      const n = riders.filter(r => (r.program || []).includes(x.tplId)).length, need = Race.rosterSize(x);
+      return `<td class="c small ${!Game.isInvited(G, x, t.id) || x.status === 'done' ? 'muted' : n >= need ? 'good-t' : 'bad-t'}">${Game.isInvited(G, x, t.id) ? n + '/' + need : '–'}</td>`;
+    }).join('');
+    const upcoming = [];
+    for (let w = G.week + 1; w <= W; w++) upcoming.push(w);
+    const camps = (G.camps || []).slice().sort((a, b) => a.week - b.week);
+    const cf = S.campForm || (S.campForm = { type: 'altitude', week: '', rids: {} });
+    return `<div class="pagehead"><div><div class="label">${h(t.name)} · ${G.year}</div><h1>Season planning</h1></div>
+      <div class="row"><button class="btn" data-act="autoplan">Auto-plan season</button></div></div>
+      <div class="panel"><header><h3>Race programme</h3><span class="small muted">Click a cell: ✓ planned → ★ target race (form peaks there) → off. Planned riders are picked first for each race. Aim for 60–75 race days.</span></header>
+        <div class="tablewrap"><table class="plan"><thead><tr><th>Rider</th><th>Type</th><th class="r">Days</th>${head}</tr></thead>
+        <tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="small muted">Riders planned / needed</td>${counts}</tr></tfoot></table></div></div>
+      <div class="grid g2">
+        <div class="panel"><h3>Book a training camp</h3>
+          <div class="row">
+            <div class="field"><label class="label" for="camp-type">Camp</label><select id="camp-type" data-change="campform" data-k="type">${Object.entries(DATA.CAMPS).map(([k, c]) => `<option value="${k}" ${cf.type === k ? 'selected' : ''}>${c.label} (${U.money(c.cost)}/rider)</option>`).join('')}</select></div>
+            <div class="field"><label class="label" for="camp-week">Week</label><select id="camp-week" data-change="campform" data-k="week"><option value="">Pick a week</option>${upcoming.map(w => { const r = races.find(x => w >= x.week && w < x.week + x.weeks); return `<option value="${w}" ${+cf.week === w ? 'selected' : ''}>Week ${w}${r ? ' · ' + h(r.name) : ' · no race'}</option>`; }).join('')}</select></div>
+          </div>
+          <p class="small muted">${h(DATA.CAMPS[cf.type].text)}. Riders at camp can't race that week.</p>
+          <div class="camp-riders">${riders.map(r => `<label class="small"><input type="checkbox" data-change="campform" data-k="rid" data-id="${r.id}" ${cf.rids[r.id] ? 'checked' : ''}> ${h(Riders.shortName(r))}</label>`).join('')}</div>
+          <div class="row"><button class="btn primary" data-act="bookcamp">Book camp</button><span class="small muted">${Object.values(cf.rids).filter(Boolean).length} riders · ${U.money(DATA.CAMPS[cf.type].cost * Object.values(cf.rids).filter(Boolean).length)}</span></div>
+        </div>
+        <div class="panel"><h3>Booked camps</h3>${camps.length ? camps.map(c => `<div class="obj"><span><b>Week ${c.week}</b> · ${DATA.CAMPS[c.type].label}<br><span class="small muted">${c.rids.map(id => G.riders[id] ? h(Riders.shortName(G.riders[id])) : '').join(', ')}</span></span>${c.paid ? '<span class="pill good">Done</span>' : `<button class="btn sm danger" data-act="cancelcamp" data-id="${c.id}">Cancel</button>`}</div>`).join('') : '<div class="empty">No camps booked.</div>'}
+          <h3>Race objectives</h3>${races.filter(x => x.goal).map(x => `<div class="obj small"><span>Wk ${x.week} · ${h(x.name)}</span><span class="pill ${x.goal.done === true ? 'good' : x.goal.done === false ? 'bad' : ''}">${h(x.goal.text)} · ${U.money(x.goal.reward)}</span></div>`).join('') || '<div class="empty">No invitations yet.</div>'}
+        </div>
+      </div>`;
+  }
+
   // ---------- race ----------
   function ensureSelection(race) {
     if (S.sel && S.sel.raceId === race.id) return;
     const picks = {};
-    for (const p of Race.selectRoster(G, me(), race)) picks[p.rid] = p.role;
+    const n = Race.rosterSize(race);
+    const avail = me().riders.filter(id => !Game.inCamp(G, id, G.week));
+    const planned = avail.filter(id => (G.riders[id].program || []).includes(race.tplId));
+    const base = planned.length ? Race.selectRoster(G, { riders: planned }, race) : Race.selectRoster(G, { riders: avail }, race);
+    for (const p of base.slice(0, n)) picks[p.rid] = p.role;
+    if (Object.keys(picks).length < n) {
+      for (const p of Race.selectRoster(G, { riders: avail.filter(id => picks[id] === undefined) }, race)) {
+        if (Object.keys(picks).length >= n) break;
+        picks[p.rid] = p.role === 'leader' ? 'dom' : p.role;
+      }
+    }
     S.sel = { raceId: race.id, picks };
   }
   function raceView() {
@@ -412,10 +470,10 @@ PCM.UI = (function () {
     const riders = me().riders.map(id => G.riders[id]).sort((a, b) => Race.raceKey(b, race) - Race.raceKey(a, race));
     const rows = riders.map(r => {
       const on = picks[r.id] !== undefined;
-      const dis = r.injury > 0;
+      const dis = r.injury > 0 || Game.inCamp(G, r.id, G.week);
       return `<tr class="${on ? 'mine' : ''}">
         <td><input type="checkbox" data-change="pick" data-id="${r.id}" ${on ? 'checked' : ''} ${dis ? 'disabled' : ''} aria-label="Select ${h(Riders.fullName(r))}"></td>
-        <td>${rLink(r)}${dis ? ' <span class="pill bad">injured</span>' : ''}</td><td>${spec(r)}</td>
+        <td>${rLink(r)}${dis ? ' <span class="pill bad">injured</span>' : ''}${Game.inCamp(G, r.id, G.week) ? ' <span class="pill warn">at camp</span>' : ''}${(r.peaks || []).includes(race.tplId) ? ' <span class="pill good" title="Target race: form peaks here">★ peak</span>' : (r.program || []).includes(race.tplId) ? ' <span class="pill" title="Planned in the race programme">planned</span>' : ''}</td><td>${spec(r)}</td>
         <td class="at ${aCls(Riders.ovr(r))}">${Riders.ovr(r).toFixed(0)}</td>
         <td class="at ${aCls(Race.raceKey(r, race))}" title="How well this rider suits this race">${Race.raceKey(r, race).toFixed(0)}</td>
         <td class="at ${aCls(Race.sprintKey(r))}">${Race.sprintKey(r).toFixed(0)}</td>
@@ -431,6 +489,7 @@ PCM.UI = (function () {
       ${race.kind === 'oneday' ? `<div class="panel profile">${profileSVG(race.stages[0])}<div class="small muted">${sType(race.stages[0])} ${race.stages[0].sectors ? race.stages[0].sectors + ' cobbled sectors · ' : ''}${race.stages[0].climbs.length} categorised climbs</div></div>` : `<div class="panel"><h3>Route</h3>${stageTable(race)}</div>`}
       <div class="panel">
         <header><h3>Pick your ${n} riders</h3><span class="pill ${count === n ? 'good' : 'warn'}">${count} / ${n} selected</span></header>
+        ${race.goal ? `<div class="msg"><b>Board objective:</b> ${h(race.goal.text)} · bonus ${U.money(race.goal.reward)}</div>` : ''}
         <p class="small muted">Leader gets support from domestiques. Sprinter gets a lead-out on flat finishes. Free-role riders go for breakaways. "Fit" rates how well a rider suits this route.</p>
         <div class="tablewrap"><table><thead><tr><th></th><th>Rider</th><th>Type</th><th class="c">OVR</th><th class="c">Fit</th><th class="c">SPR</th><th>Form</th><th>Fatigue</th><th class="r">Days</th><th>Role</th></tr></thead><tbody>${rows}</tbody></table></div>
         ${warn ? `<div class="msg bad small">${warn}</div>` : ''}
@@ -618,11 +677,12 @@ PCM.UI = (function () {
       const types = r.kind === 'oneday' ? sType(r.stages[0]) : `<span class="small muted">${r.stages.length} stages</span>`;
       return `<tr class="click ${cur ? 'mine' : ''}" data-act="${r.status === 'done' ? 'raceresults' : cur ? 'nav' : ''}" data-id="${r.id}" data-view="race">
         <td class="r">${r.week}${r.weeks > 1 ? '–' + (r.week + r.weeks - 1) : ''}</td><td><b>${flag(r.country)} ${h(r.name)}</b></td><td>${clsPill(r.cls)}</td><td>${types}</td>
-        <td>${status}</td><td>${w ? rLink(w) + ' <span class="small muted">' + h(G.teams[w.teamId]?.name || '') + '</span>' : ''}</td><td>${bestOurs(r)}</td></tr>`;
+        <td>${status}</td><td>${w ? rLink(w) + ' <span class="small muted">' + h(G.teams[w.teamId]?.name || '') + '</span>' : ''}</td>
+        <td>${r.goal ? `<span class="pill ${r.goal.done === true ? 'good' : r.goal.done === false ? 'bad' : ''}">${h(r.goal.text)}</span>` : ''}</td><td>${bestOurs(r)}</td></tr>`;
     }).join('');
     return `<div class="pagehead"><div><div class="label">Season ${G.year}</div><h1>Calendar</h1></div></div>
       <div class="panel"><p class="small muted">Every team rides every race. Click a finished race for full results.</p>
-      <div class="tablewrap"><table><thead><tr><th class="r">Week</th><th>Race</th><th>Class</th><th>Profile</th><th>Status</th><th>Winner</th><th>Our result</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+      <div class="tablewrap"><table><thead><tr><th class="r">Week</th><th>Race</th><th>Class</th><th>Profile</th><th>Status</th><th>Winner</th><th>Objective</th><th>Our result</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
   }
   function raceResultsModal(race) {
     const idx = S.stageView !== null && S.stageView < race.stageResults.length ? S.stageView : race.stageResults.length - 1;
@@ -909,6 +969,23 @@ PCM.UI = (function () {
       case 'startgame': startNewGame(); break;
       case 'world': S.world = el.dataset.w; S.newTeam = null; S.mgr = document.getElementById('mgr')?.value || ''; S.cname = document.getElementById('cname')?.value || ''; render(); break;
       case 'quicksave': quickSave(); break;
+      case 'autoplan': Game.autoProgram(G); toast('Season programme planned. Adjust it as you like.'); commit(); break;
+      case 'plantoggle': {
+        const r = G.riders[+id], race = el.dataset.race;
+        r.program = r.program || []; r.peaks = r.peaks || [];
+        if (r.peaks.includes(race)) { r.peaks = r.peaks.filter(x => x !== race); r.program = r.program.filter(x => x !== race); }
+        else if (r.program.includes(race)) { if (r.peaks.length >= 3) { toast('Three target races is the limit for one rider.'); break; } r.peaks.push(race); }
+        else r.program.push(race);
+        commit(); break;
+      }
+      case 'bookcamp': {
+        const cf = S.campForm;
+        const res = Game.bookCamp(G, cf.type, +cf.week, Object.keys(cf.rids).filter(k => cf.rids[k]).map(Number));
+        toast(res.msg);
+        if (res.ok) S.campForm = { type: cf.type, week: '', rids: {} };
+        commit(); break;
+      }
+      case 'cancelcamp': Game.cancelCamp(G, id); commit(); break;
       case 'savenow': saveNow(); break;
       case 'saveslot': PCM.Saves.save(G, el.dataset.slot).then(m => { toast(`Saved to ${PCM.Saves.slotLabel(m.slot)}`); render(); }, err => toast(err.message || 'Save failed')); break;
       case 'loadslot': { const sl = el.dataset.slot; loadGame(() => PCM.Saves.load(sl), 'Loaded ' + PCM.Saves.slotLabel(sl)); break; }
@@ -1025,6 +1102,11 @@ PCM.UI = (function () {
         render(); break;
       }
       case 'role': S.sel.picks[id] = el.value; render(); break;
+      case 'campform': {
+        const cf = S.campForm;
+        if (el.dataset.k === 'rid') cf.rids[id] = el.checked; else cf[el.dataset.k] = el.value;
+        render(); break;
+      }
       case 'liveeffort': if (S.live) { PCM.StageSim.setEffort(S.live.sim, id, +el.value); const lab = el.parentElement.querySelector('.lv-set'); if (lab) lab.textContent = el.value; } break;
       case 'mkt': S.mkt[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); break;
       case 'racestage': case 'modalstage': S.stageView = +el.value; S.raceTab = 'stage'; render(); break;

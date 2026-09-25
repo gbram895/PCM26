@@ -164,6 +164,8 @@ PCM.Game = (function () {
     G.calendar = calendarFor(G);
     computeExpectedRanks(G);
     setObjectives(G);
+    setRaceGoals(G);
+    aiPeaks(G);
     const team = G.teams[teamId];
     inbox(G, 'Welcome to ' + team.name,
       `The board has appointed you as sports director for the ${G.year} season. Our sponsor budget is ${U.money(team.sponsor)} per season and we have ${U.money(team.cash)} in the bank. ` +
@@ -294,7 +296,14 @@ PCM.Game = (function () {
         r.fatigue = U.clamp(r.fatigue - 4, 0, 100);
         continue;
       }
-      Riders.trainWeek(r, G.year);
+      Riders.trainWeek(r, G.year, trainingPlan(G, r));
+    }
+    // camps are paid for in the week they happen
+    for (const c of (G.camps || []).filter(c => c.week === G.week && !c.paid)) {
+      const cost = DATA.CAMPS[c.type].cost * c.rids.length;
+      player(G).cash -= cost;
+      ledger(G, DATA.CAMPS[c.type].label, -cost);
+      c.paid = true;
     }
     // finances
     for (const id in G.teams) {
@@ -346,6 +355,121 @@ PCM.Game = (function () {
   }
 
   // Continue button. Returns {status: 'race'|'advanced'|'season-end'}
+  // ---------------- season planning ----------------
+  // peak form for target races, extra development at training camps
+  function trainingPlan(G, r) {
+    const o = {};
+    const camp = (G.camps || []).find(c => c.week === G.week && c.rids.includes(r.id));
+    if (camp) {
+      const def = DATA.CAMPS[camp.type];
+      Object.assign(o, { focusAttrs: def.attrs, growthMult: def.growth, fatigueAdd: def.fatigue, moraleAdd: def.morale || 0 });
+      o.formTarget = U.clamp(r.form + def.form * 2, 40, 90);
+    }
+    if (r.peaks && r.peaks.length) {
+      const races = G.calendar.filter(x => r.peaks.includes(x.tplId));
+      const next = races.filter(x => x.week >= G.week).sort((a, b) => a.week - b.week)[0];
+      const last = races.filter(x => x.week + x.weeks <= G.week).sort((a, b) => b.week - a.week)[0];
+      if (next && next.week - G.week <= 4) o.formTarget = 80 + (4 - (next.week - G.week)) * 3.5;
+      else if (last && G.week - (last.week + last.weeks) < 2) o.formTarget = 48; // coming down after a peak
+    }
+    return o;
+  }
+  function inCamp(G, rid, week) { return (G.camps || []).some(c => c.week === week && c.rids.includes(rid)); }
+  function bookCamp(G, type, week, rids) {
+    if (!DATA.CAMPS[type] || !rids.length) return { ok: false, msg: 'Pick at least one rider.' };
+    if (week <= G.week || week > W) return { ok: false, msg: 'Pick a week later in the season.' };
+    const cost = DATA.CAMPS[type].cost * rids.length;
+    if (player(G).cash < cost) return { ok: false, msg: `A ${DATA.CAMPS[type].label.toLowerCase()} for ${rids.length} riders costs ${U.money(cost)}.` };
+    G.camps = (G.camps || []).filter(c => c.week !== week || c.type !== type);
+    G.camps.push({ id: Date.now().toString(36), type, week, rids: rids.slice() });
+    return { ok: true, msg: `${DATA.CAMPS[type].label} booked for week ${week} (${rids.length} riders, ${U.money(cost)}).` };
+  }
+  function cancelCamp(G, id) { G.camps = (G.camps || []).filter(c => c.id !== id || c.paid); }
+
+  function raceDays(race) { return race.stages.length; }
+  // fill every invited race with the riders who suit it, keeping each rider under ~70 race days, and pick peaks
+  function autoProgram(G) {
+    const t = player(G);
+    const riders = t.riders.map(id => G.riders[id]);
+    for (const r of riders) { r.program = []; r.peaks = []; }
+    const days = new Map(riders.map(r => [r.id, 0]));
+    const races = G.calendar.filter(x => x.week >= G.week && isInvited(G, x, t.id));
+    // how well a race suits a rider compared with the races that suit him best
+    const bestKey = new Map(riders.map(r => [r.id, Math.max(...races.map(x => Race.raceKey(r, x)))]));
+    for (const race of races) {
+      const n = Race.rosterSize(race);
+      const pick = riders.filter(r => days.get(r.id) + raceDays(race) <= 70)
+        .map(r => { const k = Race.raceKey(r, race); return { r, s: k - (bestKey.get(r.id) - k) * 1.2 - days.get(r.id) * 0.08 }; })
+        .sort((a, b) => b.s - a.s).slice(0, n + 1);
+      for (const { r } of pick) { r.program.push(race.tplId); days.set(r.id, days.get(r.id) + raceDays(race)); }
+    }
+    const weight = { GT: 3, MON: 2.5, WT: 1.5, CL: 1.2, PRO: 0.7 };
+    for (const r of riders.sort((a, b) => Riders.ovr(b) - Riders.ovr(a)).slice(0, 6)) {
+      const opts = races.filter(x => r.program.includes(x.tplId)).map(x => ({ x, v: Race.raceKey(r, x) + weight[x.cls] * 3 })).sort((a, b) => b.v - a.v);
+      for (const { x } of opts) {
+        if (r.peaks.length >= 2) break;
+        if (r.peaks.every(p => Math.abs(G.calendar.find(c => c.tplId === p).week - x.week) >= 8)) r.peaks.push(x.tplId);
+      }
+    }
+  }
+  // AI leaders aim their form at their team's big goals
+  function aiPeaks(G) {
+    const weight = { GT: 3, MON: 2.5, WT: 1.5, CL: 1.2, PRO: 0.7 };
+    for (const t of Object.values(G.teams)) {
+      if (t.id === G.playerTeamId || t.tier === 'CT') continue;
+      const top = t.riders.map(id => G.riders[id]).sort((a, b) => Riders.ovr(b) - Riders.ovr(a)).slice(0, 4);
+      for (const r of top) {
+        const opts = G.calendar.filter(x => isInvited(G, x, t.id)).map(x => ({ x, v: Race.raceKey(r, x) + weight[x.cls] * 3 })).sort((a, b) => b.v - a.v);
+        r.peaks = [];
+        for (const { x } of opts) {
+          if (r.peaks.length >= 2) break;
+          if (r.peaks.every(p => Math.abs(G.calendar.find(c => c.tplId === p).week - x.week) >= 8)) r.peaks.push(x.tplId);
+        }
+      }
+    }
+  }
+
+  // the board sets a target for each race we ride, based on how our best rider compares with the field
+  const GOAL_REWARD = { GT: 150000, WT: 60000, MON: 80000, CL: 40000, PRO: 25000 };
+  function setRaceGoals(G) {
+    const t = player(G);
+    for (const race of G.calendar) {
+      if (!isInvited(G, race, t.id)) { race.goal = null; continue; }
+      const teams = (race.invited || Object.keys(G.teams)).map(id => G.teams[id]).filter(Boolean);
+      const best = tm => Math.max(...tm.riders.map(id => Race.raceKey(G.riders[id], race)));
+      const ranked = teams.map(tm => ({ id: tm.id, v: best(tm) })).sort((a, b) => b.v - a.v);
+      const rank = ranked.findIndex(x => x.id === t.id) + 1;
+      const gcRace = race.kind === 'stage';
+      let goal;
+      if (rank === 1) goal = { kind: 'pos', pos: 1, text: gcRace ? 'Win the GC' : 'Win the race' };
+      else if (rank <= 3) goal = { kind: 'pos', pos: 3, text: gcRace ? 'Podium in the GC' : 'Finish on the podium' };
+      else if (rank <= 8) goal = { kind: 'pos', pos: 10, text: gcRace ? 'Top 10 in the GC' : 'Top 10' };
+      else if (gcRace && race.stages.length >= 5) goal = { kind: 'stage', text: 'Win a stage' };
+      else goal = { kind: 'pos', pos: 20, text: gcRace ? 'Top 20 in the GC' : 'Top 20' };
+      const mult = goal.kind === 'stage' ? 1.2 : { 1: 2, 3: 1.4, 10: 1, 20: 0.6 }[goal.pos];
+      goal.reward = Math.round(GOAL_REWARD[race.cls] * mult / 1000) * 1000;
+      race.goal = goal;
+    }
+  }
+  function checkRaceGoal(G, race) {
+    if (!race.goal || race.goal.done !== undefined || race.status !== 'done' || !race.final) return;
+    const ours = new Set((race.entrants || []).map(x => x[0]));
+    let done;
+    if (race.goal.kind === 'stage') done = race.stageResults.some(s => ours.has(s.results[0] && s.results[0][0]));
+    else { const i = race.final.gc.findIndex(([id]) => ours.has(id)); done = i >= 0 && i + 1 <= race.goal.pos; }
+    race.goal.done = done;
+    const t = player(G);
+    if (done) {
+      t.cash += race.goal.reward;
+      ledger(G, 'Race objective: ' + race.name, race.goal.reward);
+      G.board.confidence = U.clamp(G.board.confidence + 3, 0, 100);
+      inbox(G, 'Objective met: ' + race.name, `${race.goal.text}: done. The sponsor pays a ${U.money(race.goal.reward)} bonus and the board is pleased.`);
+    } else {
+      G.board.confidence = U.clamp(G.board.confidence - 2, 0, 100);
+      inbox(G, 'Objective missed: ' + race.name, `We were asked to "${race.goal.text.toLowerCase()}" and fell short. The board expects better.`);
+    }
+  }
+
   function advance(G) {
     const race = currentRace(G);
     if (race && race.status !== 'done') {
@@ -357,6 +481,7 @@ PCM.Game = (function () {
     }
     if (G.week > W) return { status: 'season-end' };
     if (race && race.status === 'done' && race.week === G.week) {
+      checkRaceGoal(G, race);
       for (let i = 0; i < race.weeks; i++) processWeek(G, race.racers);
       delete race.racers;
     } else {
@@ -564,6 +689,10 @@ PCM.Game = (function () {
     for (const id in G.teams) { G.teams[id].season = { pts: 0, wins: 0 }; G.teams[id].log = []; }
     G.calendar = calendarFor(G);
     computeExpectedRanks(G);
+    G.camps = [];
+    for (const id in G.riders) { G.riders[id].program = []; G.riders[id].peaks = []; }
+    setRaceGoals(G);
+    aiPeaks(G);
 
     const summary = { year, rank, objectives, confidence: conf, fired, retired, left, developments, sponsorOld, sponsorNew: t.sponsor, cash: t.cash };
     if (fired) {
@@ -590,6 +719,7 @@ PCM.Game = (function () {
     G.board.confidence = 55;
     computeExpectedRanks(G);
     setObjectives(G);
+    setRaceGoals(G);
     inbox(G, 'New job: ' + G.teams[teamId].name, `You've been hired as sports director of ${G.teams[teamId].name}. A fresh start!`);
   }
 
@@ -604,6 +734,7 @@ PCM.Game = (function () {
     if (!G || !G.teams || !G.riders) throw new Error('Not a valid save file');
     R.setState(G.rng || 1);
     for (const id in G.riders) Riders.ensureAttrs(G.riders[id]);
+    if (G.calendar && G.calendar.some(r => r.goal === undefined)) setRaceGoals(G); // saves from before race objectives
     Riders.setNextId(G.nextId || (Math.max(0, ...Object.keys(G.riders).map(Number)) + 1));
     return G;
   }
@@ -616,7 +747,7 @@ PCM.Game = (function () {
   function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 
   return {
-    newGame, realAvailable, teamDefs, isInvited, liveStage, finishLive, advance, processWeek, startRace, simStage, autoRace, currentRace, nextRace, endSeason, jobOffers, takeJob,
+    newGame, realAvailable, teamDefs, isInvited, liveStage, finishLive, advance, autoProgram, bookCamp, cancelCamp, inCamp, setRaceGoals, raceDays, processWeek, startRace, simStage, autoRace, currentRace, nextRace, endSeason, jobOffers, takeJob,
     offer, renew, release, releaseCost, askingSalary, askingFee, payroll, player, teamRanking, riderRanking, teamStrength,
     evalObjective, news, inbox, ledger, serialize, deserialize, save, load, clearSave, inRunningRace,
     MAX_ROSTER, MIN_ROSTER,

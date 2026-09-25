@@ -149,6 +149,15 @@ PCM.DATA = (function () {
     return iso ? String.fromCodePoint(...[...iso].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '🏳️';
   }
 
+  // training camps: a week away that speeds up development of the camp's attributes
+  const CAMPS = {
+    altitude: { label: 'Altitude camp', attrs: ['mo', 'mm', 'st', 're'], cost: 14000, growth: 3, form: 6, fatigue: 4, text: 'Climbing, endurance and recovery; sharpens form' },
+    sprint: { label: 'Sprint camp', attrs: ['sp', 'acc', 'fl'], cost: 8000, growth: 3, form: 3, fatigue: 2, text: 'Sprint, acceleration and flat speed' },
+    tt: { label: 'Time trial camp', attrs: ['tt', 'prl', 'fl'], cost: 10000, growth: 3, form: 3, fatigue: 2, text: 'Wind tunnel and TT bike work' },
+    cobbles: { label: 'Cobbles recon', attrs: ['co', 'res', 'hi'], cost: 7000, growth: 3, form: 3, fatigue: 3, text: 'Riding the cobbled sectors and bergs' },
+    team: { label: 'Team building', attrs: ['brk', 'dh'], cost: 5000, growth: 1.5, form: 2, fatigue: 0, morale: 8, text: 'Morale and teamwork' },
+  };
+
   const SEASON_WEEKS = 41;
 
   const UCI = {
@@ -236,6 +245,6 @@ PCM.DATA = (function () {
     intense: { label: 'Intense', form: 74, growth: 1.7, fatigue: 0.55 },
   };
 
-  return { NATIONS, NAT_INFO, natName, natFlag, TEAMS, PATTERNS, CALENDAR, SEASON_WEEKS, UCI, PRIZE_PER_POINT, STAGE_POINTS, KOM_POINTS,
+  return { CAMPS, NATIONS, NAT_INFO, natName, natFlag, TEAMS, PATTERNS, CALENDAR, SEASON_WEEKS, UCI, PRIZE_PER_POINT, STAGE_POINTS, KOM_POINTS,
     CLIMB_PREFIX, CLIMB_NAMES, ATTRS, SPECIALTIES, TEMPLATES, TRAINING_FOCUS, TRAINING_LOAD };
 })();

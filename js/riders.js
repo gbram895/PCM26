@@ -108,7 +108,8 @@ PCM.Riders = (function () {
   }
 
   // One week of training for a rider not racing
-  function trainWeek(r, year) {
+  // o: { formTarget, growthMult, focusAttrs, fatigueAdd, moraleAdd } from peaks and training camps
+  function trainWeek(r, year, o = {}) {
     const load = DATA.TRAINING_LOAD[r.plan] || DATA.TRAINING_LOAD.normal;
     const recover = (10 + (r.a.re - 60) / 4) * load.fatigue;
     r.fatigue = U.clamp(r.fatigue - recover, 0, 100);
@@ -118,16 +119,20 @@ PCM.Riders = (function () {
       r.form = U.clamp(r.form - 3, 30, 99);
       return;
     }
-    r.form = U.clamp(r.form + (load.form - r.form) * 0.18 + R.normal(0, 1.3), 30, 99);
-    r.morale = U.clamp(r.morale + (62 - r.morale) * 0.05, 10, 100);
+    const target = o.formTarget !== undefined ? o.formTarget : load.form;
+    r.form = U.clamp(r.form + (target - r.form) * (o.formTarget !== undefined ? 0.3 : 0.18) + R.normal(0, 1.3), 30, 99);
+    r.morale = U.clamp(r.morale + (62 - r.morale) * 0.05 + (o.moraleAdd || 0), 10, 100);
+    if (o.fatigueAdd) r.fatigue = U.clamp(r.fatigue + o.fatigueAdd, 0, 100);
+    if (o.formTarget === undefined && r.form > 78) r.form -= 2; // top form fades without a target
 
     const a = age(r, year);
     const cur = ovr(r);
-    if (load.growth > 0 && cur < r.pot) {
+    if ((load.growth > 0 || o.growthMult) && cur < r.pot) {
       const ageMult = a <= 21 ? 1.6 : a <= 24 ? 1.2 : a <= 27 ? 0.7 : 0.25;
-      const attrs = DATA.TRAINING_FOCUS[r.focus].attrs;
-      const gain = 0.05 * load.growth * ageMult * U.clamp((r.pot - cur) / 4, 0.2, 1.5);
-      for (const k of attrs) r.a[k] = Math.min(90, r.a[k] + gain * (r.focus === 'balanced' ? 0.4 : 1));
+      const focus = DATA.TRAINING_FOCUS[r.focus] || DATA.TRAINING_FOCUS.balanced;
+      const attrs = o.focusAttrs || focus.attrs;
+      const gain = 0.05 * Math.max(load.growth, 1) * (o.growthMult || 1) * ageMult * U.clamp((r.pot - cur) / 4, 0.2, 1.5);
+      for (const k of attrs) r.a[k] = Math.min(90, r.a[k] + gain * (!o.focusAttrs && r.focus === 'balanced' ? 0.4 : 1));
     }
   }
 

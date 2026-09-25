@@ -548,7 +548,8 @@ PCM.Race = (function () {
     // form: racing sharpens riders who aren't exhausted
     for (const e of race.entries) {
       const r = G.riders[e.rid];
-      if (r.fatigue < 55) r.form = U.clamp(r.form + Math.min(9, race.stages.length * 0.9 + 2), 0, 97);
+      // racing sharpens form, but real peaks only come from building towards a target race
+      if (r.fatigue < 55) r.form = U.clamp(r.form + Math.min(4, race.stages.length * 0.3 + 1), 0, Math.max(r.form, 82));
       else r.form = U.clamp(r.form - 3, 30, 99);
     }
 
