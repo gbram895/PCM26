@@ -7,12 +7,14 @@ PCM.Live = (function () {
   let st = null;
 
   const ORDER_HELP = {
-    auto: 'Let the team car decide',
-    follow: 'Stay in the wheels',
-    pull: 'Ride on the front: raises the group\'s pace, costs energy',
-    help: 'Drop back to the leader and pace him',
-    save: 'Sit at the back and save energy (easier to lose the wheel)',
+    auto: 'The team car decides',
+    follow: 'Stay in the group. The effort level is his limit: above it he lets the wheel go',
+    pull: 'Ride on the front at the chosen effort: raises the group\'s pace, costs energy',
+    save: 'Sit in the wheels and skip turns: saves energy, easier to lose the wheel',
+    help: 'Stay with the leader, drop back to pace him if he is dropped',
+    leadout: 'Follow until 5 km to go, then lead out the sprinter',
   };
+  function effortClass(e) { return e >= 9 ? 'lo' : e >= 7 ? 'mid' : 'hi'; }
 
   function energyClass(e) { return e >= 60 ? 'hi' : e >= 30 ? 'mid' : 'lo'; }
   function name(r) { return U.esc(Riders.shortName(r)); }
@@ -100,12 +102,19 @@ PCM.Live = (function () {
       bar.style.width = Math.max(0, x.energy) + '%';
       row.querySelector('.meter').className = 'meter energy ' + energyClass(x.energy);
       row.querySelector('.lv-e').textContent = Math.round(x.energy);
-      row.querySelector('.lv-act').textContent = x.burst > 0 ? 'Attacking!' : x.act === 'pull' ? 'On the front' : x.act === 'help' ? 'Helping leader' : x.act === 'save' ? 'Saving energy' : '';
-      const sel = row.querySelector('select');
-      if (sel && document.activeElement !== sel && sel.value !== x.order) sel.value = x.order;
+      row.querySelector('.lv-act').textContent = x.burst > 0 ? 'Attacking!' : x.act === 'pull' ? (x.leadout ? 'Leading out' : 'On the front') : x.act === 'help' ? 'With the leader' : x.act === 'save' ? 'Sitting on' : '';
+      const ef = Math.round(x.needed || 1);
+      row.querySelectorAll('.gauge i').forEach((seg, i) => { seg.className = i < ef ? 'on ' + effortClass(ef) : ''; });
+      row.querySelector('.lv-ef').textContent = ef;
+      row.querySelectorAll('.ord').forEach(b => b.classList.toggle('on', b.dataset.o === x.order));
+      const range = row.querySelector('input[type=range]');
+      if (range && document.activeElement !== range && +range.value !== x.effort) { range.value = x.effort; row.querySelector('.lv-set').textContent = x.effort; }
+      row.querySelector('.lv-b').textContent = '×' + x.bottles;
       const btn = row.querySelector('[data-act=liveattack]');
       if (btn) btn.disabled = x.out || sim.done || x.burst > 0 || x.cooldown > 0 || x.energy < 8;
-      if (x.out) { row.classList.add('out'); if (sel) sel.disabled = true; }
+      const bot = row.querySelector('[data-act=livebottle]');
+      if (bot) bot.disabled = x.out || sim.done || x.bottles <= 0 || sim.k - x.lastBottle < 15 || x.energy >= 98;
+      if (x.out) { row.classList.add('out'); row.querySelectorAll('button, input').forEach(b => { b.disabled = true; }); }
     }
 
     // commentary
@@ -118,10 +127,16 @@ PCM.Live = (function () {
     if (!mine.length) { el.mine.innerHTML = '<div class="empty">None of our riders are racing.</div>'; return; }
     el.mine.innerHTML = mine.map(x => `<div class="lv-rider" data-rid="${x.rid}">
       <div class="row between"><span><b>${name(x.r)}</b> <span class="small muted">${{ leader: 'Leader', sprinter: 'Sprinter', dom: 'Domestique', free: 'Free role' }[x.role] || ''}</span></span><span class="small lv-where"></span></div>
-      <div class="row lv-energy"><span class="label">Energy</span><div class="meter energy"><i></i></div><b class="num lv-e"></b><span class="small lv-act"></span></div>
-      <div class="row">
-        <select data-change="liveorder" data-id="${x.rid}" aria-label="Order for ${name(x.r)}">${Object.entries(PCM.StageSim.ORDERS).map(([k, l]) => `<option value="${k}" title="${ORDER_HELP[k]}" ${x.order === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
-        <button class="btn sm" data-act="liveattack" data-id="${x.rid}" title="Launch an attack: a big effort for a few kilometres">Attack</button>
+      <div class="lv-bars">
+        <span class="label">Energy</span><div class="meter energy"><i></i></div><b class="num lv-e"></b>
+        <span class="label">Effort</span><div class="gauge">${'<i></i>'.repeat(10)}</div><b class="num lv-ef"></b>
+      </div>
+      <div class="orders" role="group" aria-label="Orders">${Object.entries(PCM.StageSim.ORDERS).map(([k, l]) => `<button class="ord" data-act="liveorder" data-id="${x.rid}" data-o="${k}" title="${ORDER_HELP[k]}">${l}</button>`).join('')}</div>
+      <div class="row lv-actions">
+        <label class="small effort-set">Effort <input type="range" min="1" max="10" step="1" value="${x.effort}" data-change="liveeffort" data-id="${x.rid}" aria-label="Effort level for ${name(x.r)}"><b class="num lv-set">${x.effort}</b></label>
+        <button class="btn sm" data-act="liveattack" data-id="${x.rid}" title="A big effort for a few kilometres, harder at higher effort">Attack</button>
+        <button class="btn sm" data-act="livebottle" data-id="${x.rid}" title="Drink or eat: some energy back (3 per stage, 15 km apart)">Bottle <span class="lv-b"></span></button>
+        <span class="small lv-act"></span>
       </div></div>`).join('');
   }
 

@@ -566,7 +566,7 @@ PCM.UI = (function () {
       <div class="row" id="lv-done" hidden><button class="btn go" data-act="liveclose">Show results ▸</button></div>
       <div class="grid g2">
         <div class="stack"><h4>Our riders</h4>
-          <div class="row small"><span class="label">Team orders</span>${[['auto', 'All auto'], ['follow', 'All follow'], ['chase', 'Chase'], ['protect', 'Protect leader']].map(([k, l]) => `<button class="btn sm" data-act="liveteam" data-o="${k}">${l}</button>`).join('')}</div>
+          <div class="row small"><span class="label">Team orders</span>${[['auto', 'All auto'], ['chase', 'Chase'], ['tempo', 'Tempo for leader'], ['protect', 'Protect leader'], ['leadout', 'Lead-out train']].map(([k, l]) => `<button class="btn sm" data-act="liveteam" data-o="${k}">${l}</button>`).join('')}</div>
           <div id="lv-mine" class="stack"></div></div>
         <div class="stack"><h4>On the road</h4><div id="lv-groups" class="stack"></div></div>
       </div>
@@ -949,6 +949,8 @@ PCM.UI = (function () {
       case 'liveskip': PCM.Live.skip(); break;
       case 'liveclose': PCM.Live.stop(); S.live = null; S.raceTab = 'stage'; commit(); break;
       case 'livepause': PCM.Live.togglePause(); break;
+      case 'liveorder': if (S.live) { PCM.StageSim.setOrder(S.live.sim, +id, el.dataset.o); PCM.Live.refresh(); } break;
+      case 'livebottle': if (S.live && PCM.StageSim.eat(S.live.sim, +id)) { PCM.Live.refresh(); toast(Riders.shortName(G.riders[+id]) + ' takes a bottle.'); } break;
       case 'liveattack': if (S.live && PCM.StageSim.attack(S.live.sim, +id)) { PCM.Live.refresh(); toast(Riders.fullName(G.riders[+id]) + ' attacks!'); } break;
       case 'liveteam': if (S.live) { PCM.StageSim.teamOrder(S.live.sim, G.playerTeamId, el.dataset.o); PCM.Live.start(document.getElementById('live'), { G, race: G.calendar.find(r => r.id === S.live.raceId), stage: S.live.sim.stage, sim: S.live.sim, onDone: liveDone }); } break;
       case 'racetab': S.raceTab = el.dataset.t; render(); break;
@@ -1023,7 +1025,7 @@ PCM.UI = (function () {
         render(); break;
       }
       case 'role': S.sel.picks[id] = el.value; render(); break;
-      case 'liveorder': if (S.live) PCM.StageSim.setOrder(S.live.sim, id, el.value); break;
+      case 'liveeffort': if (S.live) { PCM.StageSim.setEffort(S.live.sim, id, +el.value); const lab = el.parentElement.querySelector('.lv-set'); if (lab) lab.textContent = el.value; } break;
       case 'mkt': S.mkt[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); break;
       case 'racestage': case 'modalstage': S.stageView = +el.value; S.raceTab = 'stage'; render(); break;
     }

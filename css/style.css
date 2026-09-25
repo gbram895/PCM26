@@ -263,3 +263,16 @@ details > summary { cursor: pointer; color: var(--ink-2); }
 .lgroup.has-mine { border-color: var(--leader); background: var(--mine); }
 .mine-name { color: var(--accent); }
 .live .marker.m-mine circle, .marker.m-mine circle { stroke: var(--leader); stroke-width: 3; }
+.lv-bars { display: grid; grid-template-columns: auto 1fr 28px auto 1fr 20px; gap: 6px 8px; align-items: center; }
+.gauge { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; min-width: 80px; }
+.gauge i { height: 10px; border-radius: 2px; background: var(--surface); border: 1px solid var(--line); }
+.gauge i.on.hi { background: var(--good); border-color: transparent; }
+.gauge i.on.mid { background: var(--warn); border-color: transparent; }
+.gauge i.on.lo { background: var(--bad); border-color: transparent; }
+.orders { display: flex; flex-wrap: wrap; gap: 4px; }
+.ord { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink-2); }
+.ord:hover { border-color: var(--accent); }
+.ord.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.effort-set { display: inline-flex; align-items: center; gap: 6px; }
+.effort-set input { width: 110px; accent-color: var(--accent); }
+@media (max-width: 520px) { .lv-bars { grid-template-columns: auto 1fr 28px; } }

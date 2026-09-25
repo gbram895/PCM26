@@ -10,10 +10,14 @@ PCM.StageSim = (function () {
   // energy used per km before effort and stamina multipliers
   const DRAIN = { flat: 0.28, rolling: 0.5, climb: 0.85, descent: 0.1, cobbles: 0.8 };
   // share of a kilometre's time gained per point of pace; climbs are slower, so each point counts for less
-  const PACE_K = { flat: 0.0065, rolling: 0.005, climb: 0.0032, descent: 0.005, cobbles: 0.0048 };
+  const PACE_K = { flat: 0.0065, rolling: 0.005, climb: 0.0028, descent: 0.005, cobbles: 0.0048 };
   // how far below the pace a rider can be before losing the wheel on a climb, by category
   const CLIMB_TOL = { 4: 5, 3: 4, 2: 3, 1: 2.4, HC: 2.2 };
-  const ORDERS = { auto: 'Auto', follow: 'Follow', pull: 'Pull', help: 'Help leader', save: 'Save energy' };
+  // PCM-style orders; attack and bottle are one-off actions
+  const ORDERS = { auto: 'Auto', follow: 'Follow', pull: 'Tempo', save: 'Sit on', help: 'Protect leader', leadout: 'Lead-out' };
+  const BOTTLES = 3;
+  const effortBonus = e => (e - 6) * 0.8;                 // pace added when riding at effort e
+  const effortCost = e => 0.6 + e * 0.16;                  // energy multiplier when working at effort e
   const TERRAIN_LABEL = { flat: 'Flat', rolling: 'Rolling', climb: 'Climb', descent: 'Descent', cobbles: 'Cobbles' };
 
   const mean = a => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0);
@@ -88,6 +92,7 @@ PCM.StageSim = (function () {
       riders.push({
         rid: e.rid, teamId: e.teamId, role: e.role, r, adj, energy, startEnergy: energy,
         order: 'auto', act: 'follow', burst: 0, cooldown: 0, out: false, eff: 0, support: 0, shelter: 0,
+        effort: 8, needed: 4, bottles: BOTTLES, lastBottle: -99,
         gcGap: oneday ? 0 : st.t - leadT, gcPos: gcPos.get(e.rid) || 999, mine: e.teamId === G.playerTeamId,
       });
     }
@@ -115,9 +120,23 @@ PCM.StageSim = (function () {
   function attack(sim, rid) {
     const x = sim.byRid.get(rid);
     if (!x || x.out || x.burst > 0 || x.cooldown > 0 || x.energy < 8) return false;
-    x.burst = 4.5 + (x.r.a.acc - 70) * 0.05; // acceleration decides how hard the jump is
+    // acceleration and the chosen effort decide how hard the jump is
+    x.burst = Math.max(2, 4.5 + (x.r.a.acc - 70) * 0.05 + (x.effort - 8) * 0.5);
     x.cooldown = 6;
     x.act = 'attack';
+    return true;
+  }
+  function setEffort(sim, rid, v) {
+    const x = sim.byRid.get(rid);
+    if (x) x.effort = U.clamp(Math.round(v), 1, 10);
+  }
+  // a bottle or gel: some energy back, three per stage, at least 15 km apart
+  function eat(sim, rid) {
+    const x = sim.byRid.get(rid);
+    if (!x || x.out || x.bottles <= 0 || sim.k - x.lastBottle < 15 || x.energy >= 98) return false;
+    x.bottles--;
+    x.lastBottle = sim.k;
+    x.energy = Math.min(100, x.energy + 8);
     return true;
   }
   function teamOrder(sim, teamId, order) {
@@ -132,6 +151,13 @@ PCM.StageSim = (function () {
       doms.slice(0, 2).forEach(x => { x.order = 'pull'; });
     } else if (order === 'protect') {
       for (const x of alive) x.order = x === t.leader ? 'follow' : 'help';
+    } else if (order === 'tempo') {
+      // two domestiques with the leader set a hard tempo for him
+      const g = t.leader && groupOf(sim, t.leader);
+      const doms = alive.filter(x => x !== t.leader && x.role !== 'sprinter' && g && g.riders.includes(x)).sort((a, b) => b.energy - a.energy);
+      doms.slice(0, 2).forEach(x => { x.order = 'pull'; x.effort = 8; });
+    } else if (order === 'leadout') {
+      for (const x of alive) x.order = x === t.sprinter || x === t.leader ? 'follow' : 'leadout';
     } else {
       for (const x of alive) x.order = order;
     }
@@ -217,13 +243,22 @@ PCM.StageSim = (function () {
       const g = groupOf(sim, x);
       if (!g) continue;
       if (x.cooldown > 0) x.cooldown--;
-      if (x.order !== 'auto') { if (x.burst <= 0) x.act = x.order; }
+      if (x.order !== 'auto') {
+        if (x.burst <= 0) x.act = x.order === 'leadout' ? (remaining <= 5 ? 'pull' : 'follow') : x.order;
+        if (x.order === 'leadout') x.leadout = true;
+      }
       else if (x.burst <= 0) {
+        x.leadout = false;
+        if (x.energy < 55 && x.bottles > 0 && R.chance(0.2)) eat(sim, x.rid);
         x.act = 'follow';
         if (g === pel) {
           const quota = sim.chasers.get(x.teamId) || 0;
           const used = pulling.get(x.teamId) || 0;
-          if (quota > used && x.role !== 'leader' && x.role !== 'sprinter' && x.energy > 18) { x.act = 'pull'; pulling.set(x.teamId, used + 1); }
+          if (quota > used && x.role !== 'leader' && x.role !== 'sprinter' && x.energy > 18) {
+            x.act = 'pull'; pulling.set(x.teamId, used + 1);
+            x.effort = remaining <= 6 ? 9 : quota > 1 ? 9 : 8;
+            if (remaining <= 6) x.leadout = true;
+          }
           // GC teams set tempo on the decisive climbs
           const t = sim.teams[x.teamId];
           if (x.act === 'follow' && stage.type === 'mountain' && onFinalClimb && t.leader && t.leader !== x && g.riders.includes(t.leader) &&
@@ -329,11 +364,11 @@ PCM.StageSim = (function () {
       const pullers = g.riders.filter(x => (x.act === 'pull' || (x.act === 'help' && chasing && g.riders.includes(sim.teams[x.teamId].leader))) && x.energy > 10 && x.burst <= 0);
       const effs = g.riders.map(x => x.eff).sort((a, b) => a - b);
       let pace;
-      const workers = g.riders.filter(x => x.burst <= 0);
+      const workers = g.riders.filter(x => x.burst <= 0 && x.act !== 'save');
       if (small) pace = mean((workers.length ? workers : g.riders).map(x => x.eff)) + (g.riders.length === 1 ? -0.5 : g.riders.length <= 3 ? 0.3 : 0.8);
       else if (pullers.length) {
-        const best = pullers.map(x => x.eff).sort((a, b) => b - a).slice(0, 3);
-        pace = mean(best) + 1.5 + Math.min(1.5, 0.3 * (pullers.length - 1));
+        const best = pullers.map(x => x.eff + effortBonus(x.effort)).sort((a, b) => b - a).slice(0, 3);
+        pace = mean(best) + Math.min(1.5, 0.3 * (pullers.length - 1));
       }
       else if (seg.terr === 'climb') pace = quant(effs, finalClimb ? 0.6 : 0.45) - (finalClimb ? 1 : 1.5);
       else pace = quant(effs, 0.55) - (g === pel ? 6 : 1); // an unchallenged peloton soft-pedals; other big groups organise
@@ -350,7 +385,9 @@ PCM.StageSim = (function () {
       const neutral = stage.type === 'flat' && remaining <= 3;
       // off the climbs a fast bunch still carries most riders along in the draft
       const dropPace = bunch && seg.terr !== 'climb' && seg.terr !== 'cobbles' ? Math.min(pace, quant(effs, 0.5) + (seg.terr === 'rolling' ? 1 : 4)) : pace;
-      const dropped = neutral ? [] : g.riders.filter(x => !escaped.includes(x) && !pullers.includes(x) && x.eff < dropPace - tol - x.shelter + (x.act === 'save' ? 1 : 0));
+      for (const x of g.riders) x.needed = pullers.includes(x) ? x.effort : x.burst > 0 ? 10 : U.clamp(5 + (dropPace - x.eff) * 5 / Math.max(1, tol), 1, 10);
+      const dropped = neutral ? [] : g.riders.filter(x => !escaped.includes(x) && !pullers.includes(x) &&
+        (x.eff < dropPace - tol - x.shelter + (x.act === 'save' ? 1 : 0) || (x.order === 'follow' && x.effort < 10 && x.needed > x.effort + 0.5)));
       if (escaped.length && escaped.length < g.riders.length) {
         g.riders = g.riders.filter(x => !escaped.includes(x));
         // attackers bridge across to a group less than 30 s up the road
@@ -381,13 +418,12 @@ PCM.StageSim = (function () {
       for (const x of g.riders) {
         let d = DRAIN[seg.terr] * (seg.terr === 'climb' ? 0.4 + seg.grade * 0.08 : 1);
         let m;
-        if (x.burst > 0) m = 3.5;
-        else if (x.act === 'pull' || (g.pullers || []).includes(x)) m = 1.9;
+        if (x.burst > 0) m = 3.5 * (0.6 + x.effort * 0.05);
+        else if ((g.pullers || []).includes(x)) m = effortCost(x.effort);
         else if (x.act === 'help') m = 1.05;
-        else if (!big) m = 1.45;
+        else if (!big) m = x.act === 'save' ? 1.0 : 1.45; // in a small group, sitting on means skipping turns
         else if (x.act === 'save') m = 0.7;
-        else m = seg.terr === 'flat' || seg.terr === 'descent' ? 0.75 : 1;
-        if (x.eff < g.pace - TOL[seg.terr] * 0.5) m *= 1.2;
+        else m = (seg.terr === 'flat' || seg.terr === 'descent' ? 0.75 : 1) * (0.75 + x.needed * 0.04);
         const before = x.energy;
         x.energy = Math.max(0, x.energy - d * m * (1.3 - (x.r.a.st * 0.7 + x.r.a.res * 0.3) / 100));
         if (before >= 10 && x.energy < 10 && notable(sim, x)) event(sim, 'empty', [x.rid]);
@@ -445,7 +481,8 @@ PCM.StageSim = (function () {
       const scored = g.riders.map(x => {
         let s = PCM.Race.finishAbility(x.r.a, stage) + x.adj * 0.5 + U.clamp((x.energy - 40) * 0.06, -4, 1.5) + R.normal(0, 1.8);
         if (stage.type !== 'mountain') {
-          const mates = g.riders.filter(y => y !== x && y.teamId === x.teamId && y.energy > 15 && (y.role === 'dom' || y.role === 'free')).length;
+          const mates = g.riders.filter(y => y !== x && y.teamId === x.teamId && y.energy > 15 && (y.role === 'dom' || y.role === 'free'))
+            .reduce((n, y) => n + (y.leadout ? 1.4 : 0.6), 0);
           if (x.role === 'sprinter') s += Math.min(2.5, mates * 0.6);
           else if (x.role === 'leader' && !sim.teams[x.teamId].sprinter) s += Math.min(1.5, mates * 0.3);
         }
@@ -491,5 +528,5 @@ PCM.StageSim = (function () {
     return { km: sim.k, togo: sim.stage.km - sim.k, groups, where, time: head ? head.t : 0, terr: seg.terr };
   }
 
-  return { create, step, runToEnd, finish, setOrder, attack, teamOrder, view, groupOf, ORDERS };
+  return { create, step, runToEnd, finish, setOrder, setEffort, attack, eat, teamOrder, view, groupOf, ORDERS, BOTTLES };
 })();
