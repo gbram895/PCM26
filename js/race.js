@@ -322,6 +322,7 @@ PCM.Race = (function () {
       const tact = race.tactics[e.teamId] || 'bal';
       let sig = P.sigma * (tact === 'agg' ? 1.25 : tact === 'cons' ? 0.85 : 1);
       let adj = (r.form - 60) / 8 - Math.max(0, r.fatigue - 25) / 7 + (r.morale - 60) / 20 + race.st[e.rid].df;
+      if (PCM.Mgmt) adj += PCM.Mgmt.raceBonus(G, e.teamId, stage.type === 'itt' ? 'itt' : 'road');
       if (!oneday) adj -= day * Math.max(0, 72 - r.a.re) * 0.012;
       if (oneday && stage.km > 230) adj += (r.a.st - 70) * 0.1 * ((stage.km - 230) / 40);
       adj += tact === 'agg' ? 0.7 : tact === 'cons' ? -0.5 : 0;

@@ -88,6 +88,7 @@ PCM.StageSim = (function () {
       let adj = (r.form - 60) / 8 - Math.max(0, r.fatigue - 25) / 7 + (r.morale - 60) / 20 + (st.df || 0);
       if (!oneday) adj -= day * Math.max(0, 72 - r.a.re) * 0.012;
       if (R.chance(0.02)) adj -= R.range(4, 9); // a bad day
+      if (PCM.Mgmt) adj += PCM.Mgmt.raceBonus(G, e.teamId, 'road'); // equipment and directeur sportif
       const energy = U.clamp(100 - Math.max(0, r.fatigue - 15) * 0.8, 35, 100);
       riders.push({
         rid: e.rid, teamId: e.teamId, role: e.role, r, adj, energy, startEnergy: energy,

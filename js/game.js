@@ -161,6 +161,7 @@ PCM.Game = (function () {
     }
     addFreeAgents(G, 30, 18);
     G.autoInvites = defs.filter(d => d.autoInvite).map(d => d.id);
+    if (PCM.Mgmt) PCM.Mgmt.init(G);
     G.calendar = calendarFor(G);
     computeExpectedRanks(G);
     setObjectives(G);
@@ -310,7 +311,7 @@ PCM.Game = (function () {
       const t = G.teams[id];
       const inc = t.sponsor / W;
       const sal = payroll(G, t) / W;
-      const ops = t.sponsor * 0.1 / W;
+      const ops = t.sponsor * (id === G.playerTeamId && PCM.Mgmt ? 0.06 : 0.1) / W; // our staff wages are paid separately
       t.cash += inc - sal - ops;
       if (id === G.playerTeamId) {
         ledger(G, 'Sponsor income', inc);
@@ -325,6 +326,7 @@ PCM.Game = (function () {
       if (t.tier === 'CT') { if (t.riders.length < 8) aiFill(G, t, 10); }
       else if (t.riders.length < 22) aiFill(G, t, 23);
     }
+    if (PCM.Mgmt) PCM.Mgmt.weekly(G, ledger, inbox);
     randomEvents(G);
     G.week++;
     if (G.week === 30) {
@@ -359,10 +361,11 @@ PCM.Game = (function () {
   // peak form for target races, extra development at training camps
   function trainingPlan(G, r) {
     const o = {};
+    if (PCM.Mgmt && r.teamId === G.playerTeamId) { o.growthMult = PCM.Mgmt.growthMult(G, r); o.recoverMult = PCM.Mgmt.recoverMult(G, r); }
     const camp = (G.camps || []).find(c => c.week === G.week && c.rids.includes(r.id));
     if (camp) {
       const def = DATA.CAMPS[camp.type];
-      Object.assign(o, { focusAttrs: def.attrs, growthMult: def.growth, fatigueAdd: def.fatigue, moraleAdd: def.morale || 0 });
+      Object.assign(o, { focusAttrs: def.attrs, growthMult: def.growth * (o.growthMult || 1), fatigueAdd: def.fatigue, moraleAdd: def.morale || 0 });
       o.formTarget = U.clamp(r.form + def.form * 2, 40, 90);
     }
     if (r.peaks && r.peaks.length) {
@@ -514,7 +517,19 @@ PCM.Game = (function () {
     const top = team.riders.map(id => G.riders[id]).sort((a, b) => Riders.ovr(b) - Riders.ovr(a)).slice(0, 3);
     return Math.round(Riders.transferValue(r, G.year) * (top.includes(r) ? 1.6 : 1) / 10000) * 10000;
   }
-  function offer(G, rid, salary, years) {
+  // reasons a signing can't happen, checked before any negotiation starts
+  function signCheck(G, rid, bonus = 0) {
+    const r = G.riders[rid];
+    const t = player(G);
+    if (!r || r.teamId === t.id) return 'Rider is already in your team.';
+    if (t.riders.length >= MAX_ROSTER) return `Your roster is full (${MAX_ROSTER} riders max). Release a rider first.`;
+    if (inRunningRace(G, rid)) return 'Rider is currently racing. Try again next week.';
+    if (r.teamId && G.teams[r.teamId].riders.length <= 22) return `${G.teams[r.teamId].name} can't afford to lose riders right now.`;
+    const fee = askingFee(G, r);
+    if (t.cash < fee + bonus) return `You need ${U.money(fee + bonus)} for the transfer fee and signing bonus.`;
+    return null;
+  }
+  function offer(G, rid, salary, years, opts = {}) {
     const r = G.riders[rid];
     const t = player(G);
     if (!r || r.teamId === t.id) return { ok: false, msg: 'Rider is already in your team.' };
@@ -527,7 +542,9 @@ PCM.Game = (function () {
     }
     if (t.cash < fee) return { ok: false, msg: `You need ${U.money(fee)} for the transfer fee.` };
     const ask = askingSalary(G, r);
-    if (salary < ask * 0.97) return { ok: false, msg: `${Riders.fullName(r)} rejects the offer. He wants around ${U.money(ask)} per year.` };
+    if (!opts.accepted && salary < ask * 0.97) return { ok: false, msg: `${Riders.fullName(r)} rejects the offer. He wants around ${U.money(ask)} per year.` };
+    if (t.cash < fee + (opts.bonus || 0)) return { ok: false, msg: `You need ${U.money(fee + (opts.bonus || 0))} for the fee and signing bonus.` };
+    if (opts.bonus) { t.cash -= opts.bonus; ledger(G, 'Signing bonus: ' + Riders.fullName(r), -opts.bonus); }
     if (fee) {
       t.cash -= fee;
       G.teams[r.teamId].cash += fee;
@@ -535,17 +552,20 @@ PCM.Game = (function () {
     }
     const fromName = r.teamId ? G.teams[r.teamId].name : 'free agency';
     signTo(G, r, t, salary, G.year + years - (G.week > W ? 0 : 1));
-    r.morale = 72;
+    r.morale = 72 + (opts.role === 'leader' ? 8 : 0);
+    r.promisedRole = opts.role || '';
     r.plan = 'normal';
     news(G, `${t.name} sign ${Riders.fullName(r)} from ${fromName}.`, true);
     return { ok: true, msg: `${Riders.fullName(r)} signed until end of ${r.contractEnd}!` };
   }
-  function renew(G, rid, salary, years) {
+  function renew(G, rid, salary, years, opts = {}) {
     const r = G.riders[rid];
     if (r.teamId !== G.playerTeamId) return { ok: false, msg: 'Not your rider.' };
     if (r.contractEnd > G.year + 1) return { ok: false, msg: 'Contract has more than a year left; talk again later.' };
     const ask = askingSalary(G, r);
-    if (salary < ask * 0.95) return { ok: false, msg: `${Riders.fullName(r)} wants around ${U.money(ask)} per year.` };
+    if (!opts.accepted && salary < ask * 0.95) return { ok: false, msg: `${Riders.fullName(r)} wants around ${U.money(ask)} per year.` };
+    if (opts.bonus) { player(G).cash -= opts.bonus; ledger(G, 'Signing bonus: ' + Riders.fullName(r), -opts.bonus); }
+    if (opts.role) r.promisedRole = opts.role;
     r.salary = Math.round(salary / 1000) * 1000;
     r.contractEnd = G.year + years;
     r.morale = U.clamp(r.morale + 8, 0, 100);
@@ -694,6 +714,7 @@ PCM.Game = (function () {
     setRaceGoals(G);
     aiPeaks(G);
 
+    if (PCM.Mgmt && !fired) PCM.Mgmt.seasonEnd(G, inbox);
     const summary = { year, rank, objectives, confidence: conf, fired, retired, left, developments, sponsorOld, sponsorNew: t.sponsor, cash: t.cash };
     if (fired) {
       G.fired = true;
@@ -735,6 +756,7 @@ PCM.Game = (function () {
     R.setState(G.rng || 1);
     for (const id in G.riders) Riders.ensureAttrs(G.riders[id]);
     if (G.calendar && G.calendar.some(r => r.goal === undefined)) setRaceGoals(G); // saves from before race objectives
+    if (PCM.Mgmt) PCM.Mgmt.init(G); // saves from before staff, academy and equipment
     Riders.setNextId(G.nextId || (Math.max(0, ...Object.keys(G.riders).map(Number)) + 1));
     return G;
   }
@@ -748,7 +770,7 @@ PCM.Game = (function () {
 
   return {
     newGame, realAvailable, teamDefs, isInvited, liveStage, finishLive, advance, autoProgram, bookCamp, cancelCamp, inCamp, setRaceGoals, raceDays, processWeek, startRace, simStage, autoRace, currentRace, nextRace, endSeason, jobOffers, takeJob,
-    offer, renew, release, releaseCost, askingSalary, askingFee, payroll, player, teamRanking, riderRanking, teamStrength,
+    offer, renew, release, signTo, signCheck, releaseCost, askingSalary, askingFee, payroll, player, teamRanking, riderRanking, teamStrength,
     evalObjective, news, inbox, ledger, serialize, deserialize, save, load, clearSave, inRunningRace,
     MAX_ROSTER, MIN_ROSTER,
   };

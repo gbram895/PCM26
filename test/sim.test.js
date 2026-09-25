@@ -4,7 +4,7 @@ const path = require('path');
 const vm = require('vm');
 const assert = require('assert');
 
-for (const f of ['core', 'data', 'riders', 'race', 'stagesim', 'game']) {
+for (const f of ['core', 'data', 'riders', 'race', 'stagesim', 'game', 'management']) {
   vm.runInThisContext(fs.readFileSync(path.join(__dirname, '..', 'js', f + '.js'), 'utf8'), { filename: f + '.js' });
 }
 const { Game, Riders, U } = globalThis.PCM;

@@ -37,15 +37,12 @@ This writes `js/data-real.js` (ignored by git). The **Real peloton** option then
 
 ## What you do
 
-- **Choose one of 18 fictional teams**, from a superteam to an underdog wildcard. Each team has its own budget, squad depth and board expectations.
-- **Race a 25-event season**: spring Classics and cobbled Monuments, week-long stage races, and three 21-stage Grand Tours.
-- **Pick 7–8 riders per race and give them roles**: leader, sprinter, domestique or free role. Domestiques pace their leader on climbs, lead-out men help sprinters, and free-role riders go for breakaways.
-- **Race each stage live**, kilometre by kilometre, like PCM: every rider has an energy bar that drains on climbs, cobbles, pulls and attacks. Give each rider an order at any moment (auto, follow, pull, help leader, save energy) or launch an attack, use team orders (chase, protect leader), and watch the groups, gaps and race radio. Pause, play at ½× to 10×, or skip to the finish. Stage races have GC, points, mountains, youth and team classifications.
-- **Manage form and fatigue**: set each rider's weekly training load and focus. Rotate riders so leaders arrive fresh for their goals.
-- **Develop riders**: young riders grow towards their potential; veterans decline and eventually retire.
-- **Run the business**: sponsor income, salaries and prize money. Sign free agents or buy riders from rival teams, renew contracts, release riders.
-- **Keep the board happy**: meet three season objectives or risk the sack (you'll get offers from smaller teams if you're fired).
-- **Build a dynasty**: seasons roll over with aging, retirements, new youth prospects, AI transfers and sponsor changes.
+- **Choose a team:** WorldTeams or ProTeams (real 2026 peloton, or a fictional world).
+- **Riders with PCM-style stats:** flat, mountain, medium mountain, hills, time trial, prologue, cobbles, sprint, acceleration, downhill, endurance, resistance, recovery and breakaway.
+- **Plan the season** on the Planning page: a race programme per rider, target races where form peaks, training camps (altitude, sprint, TT, cobbles recon, team building), and the board's objective for every race.
+- **Race live, kilometre by kilometre:** each rider has an energy tank and an effort level. Give orders (Auto, Follow, Tempo, Sit on, Protect leader, Lead-out), launch attacks, hand out bottles, use team orders (Chase, Tempo for leader, Protect leader, Lead-out train), and watch groups, gaps and race radio. Pause, play at ½× to 10×, or skip.
+- **Run the club:** hire and release staff (directeurs sportifs, coaches, doctors, scouts), send scouts on missions to discover prospects, grow a youth academy, pick a sponsor deal each season, upgrade road and TT bikes, and negotiate contracts (salary, length, signing bonus, promised role).
+- **Keep the board happy** across seasons: rider development and aging, retirements, transfers, and invitations for ProTeams.
 
 ## Code layout
 
@@ -59,6 +56,7 @@ This writes `js/data-real.js` (ignored by git). The **Real peloton** option then
 | `js/game.js` | World generation, weekly loop, finances, transfers, board, season rollover, save/load |
 | `js/ui.js` | All screens and event handling |
 | `js/live.js` | Live stage screen: speed, pause, orders, energy bars, groups and race radio |
+| `js/management.js` | Staff, scouting missions, youth academy, sponsor deals, equipment, contract negotiation |
 | `js/saves.js` | Save slots (Claude account or browser), save files and codes |
 | `test/sim.test.js` | Headless test that plays three full seasons |
 | `tools/build-real-db.js` | Builds the optional real-peloton roster from Wikipedia |

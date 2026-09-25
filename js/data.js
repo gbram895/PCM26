@@ -219,12 +219,12 @@ PCM.DATA = (function () {
 
   // offsets added to a base quality for each rider type
   const TEMPLATES = {
-    gc: { fl: 0, mo: 5, mm: 4, hi: 2, tt: 3, prl: 1, sp: -12, acc: -6, co: -9, dh: 2, st: 4, res: 4, re: 5, brk: -4 },
-    climber: { fl: -3, mo: 6, mm: 5, hi: 2, tt: -5, prl: -4, sp: -12, acc: -5, co: -12, dh: 1, st: 3, res: 2, re: 3, brk: 0 },
-    sprinter: { fl: 3, mo: -14, mm: -10, hi: -6, tt: -6, prl: 0, sp: 8, acc: 8, co: -2, dh: 0, st: -2, res: -2, re: 0, brk: -4 },
+    gc: { fl: 0, mo: 5, mm: 4, hi: 2, tt: 3, prl: 1, sp: -15, acc: -7, co: -12, dh: 2, st: 4, res: 4, re: 5, brk: -4 },
+    climber: { fl: -4, mo: 6, mm: 5, hi: 2, tt: -7, prl: -6, sp: -16, acc: -6, co: -16, dh: 1, st: 3, res: 2, re: 3, brk: 0 },
+    sprinter: { fl: 3, mo: -20, mm: -16, hi: -9, tt: -7, prl: 0, sp: 8, acc: 8, co: -3, dh: -1, st: -2, res: -2, re: 0, brk: -5 },
     puncheur: { fl: 0, mo: -3, mm: 3, hi: 6, tt: -4, prl: -1, sp: 1, acc: 5, co: -2, dh: 1, st: 0, res: 0, re: 0, brk: 1 },
-    cobbles: { fl: 4, mo: -12, mm: -6, hi: 1, tt: 0, prl: 0, sp: -1, acc: 0, co: 7, dh: 1, st: 2, res: 3, re: 0, brk: 2 },
-    tt: { fl: 4, mo: -5, mm: -3, hi: -3, tt: 7, prl: 7, sp: -6, acc: -4, co: -2, dh: 1, st: 1, res: 2, re: 1, brk: 2 },
+    cobbles: { fl: 4, mo: -15, mm: -8, hi: 1, tt: 0, prl: 0, sp: -1, acc: 0, co: 7, dh: 1, st: 2, res: 3, re: 0, brk: 2 },
+    tt: { fl: 4, mo: -7, mm: -5, hi: -4, tt: 7, prl: 7, sp: -8, acc: -6, co: -3, dh: 1, st: 1, res: 2, re: 1, brk: 2 },
     rouleur: { fl: 4, mo: -3, mm: -2, hi: -2, tt: 0, prl: -1, sp: -5, acc: -4, co: 0, dh: 0, st: 3, res: 3, re: 2, brk: 4 },
   };
 

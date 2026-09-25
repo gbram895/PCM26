@@ -38,7 +38,7 @@ PCM.UI = (function () {
     return `<span class="stars" title="Potential ${pot.toFixed(0)}">${s}<span class="off">${'★'.repeat(5 - full - (half ? 1 : 0))}</span></span>`;
   }
   // scouting fog: other teams' potential is an estimate
-  function scoutPot(r) { return isMine(r.id) ? r.pot : r.pot + (((r.id * 37) % 5) - 2) * 0.9; }
+  function scoutPot(r) { return isMine(r.id) ? r.pot : r.pot + (PCM.Mgmt ? PCM.Mgmt.potError(G, r) : (((r.id * 37) % 5) - 2) * 0.9); }
   function meter(v, cls) { return `<div class="meter ${cls || ''}" title="${Math.round(v)}"><i style="width:${U.clamp(v, 0, 100)}%"></i></div>`; }
   const TYPE_LABEL = { flat: 'Flat', hilly: 'Hilly', mountain: 'Mountain', itt: 'Time trial', cobbles: 'Cobbles' };
   function sType(st) { return `<span class="stype ${st.type}">${st.type === 'mountain' && st.summit ? 'Summit finish' : TYPE_LABEL[st.type]}</span>`; }
@@ -717,7 +717,7 @@ PCM.UI = (function () {
   // ---------- transfers ----------
   function transfersView() {
     const f = S.mkt;
-    let list = Object.values(G.riders).filter(r => r.teamId !== G.playerTeamId);
+    let list = Object.values(G.riders).filter(r => r.teamId !== G.playerTeamId && !r.academy);
     if (f.fa) list = list.filter(r => !r.teamId);
     if (f.tier) list = list.filter(r => r.teamId && (G.teams[r.teamId].tier || 'WT') === f.tier);
     if (f.spec) list = list.filter(r => Riders.specialty(r) === f.spec);
@@ -778,12 +778,84 @@ PCM.UI = (function () {
   // ---------- club ----------
   function clubView() {
     const t = me();
+    const tab = PCM.Mgmt ? (S.clubTab || 'board') : 'board';
+    const tabs = [['board', 'Board & history'], ['staff', 'Staff'], ['scouting', 'Scouting'], ['academy', 'Youth academy'], ['sponsor', 'Sponsor & equipment']];
+    const body = tab === 'staff' ? clubStaff() : tab === 'scouting' ? clubScouting() : tab === 'academy' ? clubAcademy() : tab === 'sponsor' ? clubSponsor() : clubBoard();
+    return `<div class="pagehead"><div><div class="label">Club</div><h1>${h(t.name)}</h1></div>
+      <div class="stats"><div class="stat"><span class="label">Nation</span><span class="v">${flag(t.nat)}</span></div><div class="stat"><span class="label">Standing</span><span class="v">${stars(60 + t.prestige * 5)}</span></div>
+      <div class="stat"><span class="label">Bank</span><span class="v num">${U.money(t.cash)}</span></div></div></div>
+      ${PCM.Mgmt ? `<div class="tabs">${tabs.map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-act="clubtab" data-t="${k}">${l}</button>`).join('')}</div>` : ''}
+      ${body}`;
+  }
+  function staffCard(sf, action) {
+    return `<div class="obj"><span><b>${flag(sf.nat)} ${h(sf.name)}</b> <span class="small muted">${PCM.Mgmt.ROLES[sf.role].label}</span><br>${stars(60 + sf.rating * 5)} <span class="small muted">${U.money(sf.salary)}/yr${action === 'fire' ? ' · until ' + sf.until : ''}</span></span>
+      ${action === 'fire' ? `<button class="btn sm danger" data-act="fire" data-id="${sf.id}">Release</button>` : `<button class="btn sm primary" data-act="hire" data-id="${sf.id}">Hire (${U.money(Math.round(sf.salary * 0.25 / 1000) * 1000)})</button>`}</div>`;
+  }
+  function clubStaff() {
+    const Mg = PCM.Mgmt;
+    return `<div class="grid g2">${Object.entries(Mg.ROLES).map(([role, def]) => {
+      const mineS = Mg.staffOf(G, role);
+      const market = (G.staffMarket || []).filter(x => x.role === role).sort((a, b) => b.rating - a.rating);
+      return `<div class="panel"><header><h3>${def.label}s</h3><span class="small muted">${mineS.length}/${def.max} · ${h(def.text)}</span></header>
+        ${mineS.map(x => staffCard(x, 'fire')).join('') || '<div class="empty">Nobody hired.</div>'}
+        <div class="label">Available</div>${market.map(x => staffCard(x, 'hire')).join('')}</div>`;
+    }).join('')}</div>`;
+  }
+  function clubScouting() {
+    const Mg = PCM.Mgmt;
+    const scouts = Mg.staffOf(G, 'scout');
+    const nats = Object.keys(Object.values(G.riders).reduce((m, r) => { m[r.nat] = 1; return m; }, {})).sort((a, b) => DATA.natName(a).localeCompare(DATA.natName(b)));
+    const active = (G.missions || []).filter(m => !m.done);
+    const doneM = (G.missions || []).filter(m => m.done).slice(-6).reverse();
+    const nScouted = Object.keys(G.scouted || {}).length;
+    return `<div class="grid g2">
+      <div class="panel"><h3>Send a scout</h3>
+        ${scouts.length ? `<div class="row"><div class="field"><label class="label" for="ms-scout">Scout</label><select id="ms-scout">${scouts.map(x => `<option value="${x.id}">${h(x.name)} (${x.rating.toFixed(1)}★)</option>`).join('')}</select></div>
+          <div class="field"><label class="label" for="ms-nat">Country</label><select id="ms-nat"><option value="">Pick a country</option>${nats.map(n => `<option value="${n}">${flag(n)} ${h(DATA.natName(n))}</option>`).join('')}</select></div>
+          <button class="btn primary" data-act="mission" style="align-self:flex-end">Start mission</button></div>
+          <p class="small muted">The scout assesses every rider from that country, including free agents and other teams' riders. Better scouts are quicker and make your estimates of unscouted riders more accurate.</p>` : '<div class="empty">Hire a scout on the Staff tab first.</div>'}
+      </div>
+      <div class="panel"><h3>Missions</h3>
+        ${active.map(m => { const sc = G.staff.find(x => x.id === m.scoutId); return `<div class="obj"><span>${flag(m.nat)} ${h(DATA.natName(m.nat))} · ${h(sc ? sc.name : '')}</span><span class="pill warn">report week ${m.end}</span></div>`; }).join('') || '<div class="empty">No scouts out.</div>'}
+        ${doneM.map(m => `<div class="obj small"><span>${flag(m.nat)} ${h(DATA.natName(m.nat))}</span><span class="pill good">Done</span></div>`).join('')}
+        <p class="small muted">${nScouted} riders scouted. Their exact potential shows on the transfer market.</p></div>
+    </div>`;
+  }
+  function clubAcademy() {
+    const Mg = PCM.Mgmt;
+    const ac = G.academy;
+    const kids = ac.riders.map(id => G.riders[id]).filter(Boolean);
+    return `<div class="grid g2">
+      <div class="panel"><header><h3>Youth academy</h3><span>${stars(60 + ac.level * 5)}</span></header>
+        <p class="small">Each season the academy brings in ${1 + Math.floor(ac.level / 2)}–${2 + Math.floor(ac.level / 2)} young riders. A better academy finds bigger talents.</p>
+        ${ac.level < 5 ? `<button class="btn" data-act="upgradeacademy">Upgrade to level ${ac.level + 1} (${U.money(Mg.ACADEMY_COST[ac.level + 1])})</button>` : '<span class="pill good">Top level</span>'}</div>
+      <div class="panel"><h3>Academy riders</h3>
+        ${kids.length ? `<div class="tablewrap"><table><thead><tr><th>Rider</th><th class="r">Age</th><th>Type</th><th class="c">OVR</th><th>POT</th><th></th></tr></thead><tbody>
+          ${kids.map(r => `<tr><td>${rLink(r)}</td><td class="r">${age(r)}</td><td>${spec(r)}</td><td class="at ${aCls(Riders.ovr(r))}">${Riders.ovr(r).toFixed(0)}</td><td>${stars(r.pot)}</td>
+            <td><div class="row"><button class="btn sm primary" data-act="promote" data-id="${r.id}">Promote</button><button class="btn sm danger" data-act="releaseacademy" data-id="${r.id}">Release</button></div></td></tr>`).join('')}</tbody></table></div>`
+          : '<div class="empty">The first intake arrives at the end of the season.</div>'}</div>
+    </div>`;
+  }
+  function clubSponsor() {
+    const Mg = PCM.Mgmt;
+    const t = me();
+    const d = t.deal || {};
+    return `<div class="grid g2">
+      <div class="panel"><h3>Sponsor deal</h3><div class="stat"><span class="label">${h(d.name || 'Sponsor')}</span><span class="v num">${U.money(t.sponsor)}/yr</span></div>
+        ${d.perWin ? `<div class="small">+ ${U.money(d.perWin)} per win</div>` : ''}${d.perPoint ? `<div class="small">+ ${U.money(d.perPoint)} per UCI point</div>` : ''}
+        <p class="small muted">New offers arrive at the end of every season.</p></div>
+      <div class="panel"><h3>Equipment</h3>
+        ${Object.entries(Mg.EQUIP).map(([k, e]) => `<div class="obj"><span><b>${e.label}</b> ${stars(60 + t.equip[k] * 5)}<br><span class="small muted">${h(e.text)}</span></span>
+          ${t.equip[k] < 5 ? `<button class="btn sm" data-act="upgradeequip" data-k="${k}">Upgrade (${U.money(Mg.EQUIP_COST[t.equip[k] + 1])})</button>` : '<span class="pill good">Best</span>'}</div>`).join('')}
+        <p class="small muted">Rival teams' equipment matches their budget: the superteams ride level 4–5 bikes.</p></div>
+    </div>`;
+  }
+  function clubBoard() {
+    const t = me();
     const conf = G.board.confidence;
     const mood = conf >= 75 ? ['Delighted', 'good'] : conf >= 50 ? ['Satisfied', 'good'] : conf >= 30 ? ['Concerned', 'warn'] : ['Losing patience', 'bad'];
     const honours = G.honours.filter(x => x.team === t.name);
-    return `<div class="pagehead"><div><div class="label">Club</div><h1>${h(t.name)}</h1></div>
-      <div class="stats"><div class="stat"><span class="label">Nation</span><span class="v">${flag(t.nat)}</span></div><div class="stat"><span class="label">Standing</span><span class="v">${stars(60 + t.prestige * 5)}</span></div></div></div>
-      <div class="grid g2">
+    return `<div class="grid g2">
         <div class="panel"><header><h3>Board confidence</h3><span class="pill ${mood[1]}">${mood[0]}</span></header>
           ${meter(conf)}<p class="small muted">Each objective met at season end raises confidence; each one missed lowers it. Drop too low and you'll be dismissed.</p>
           ${G.board.objectives.map(o => { const e = Game.evalObjective(G, o); return `<div class="obj"><span>${h(o.text)}</span><span class="pill ${e.done ? 'good' : 'warn'}">${h(e.progress)}</span></div>`; }).join('')}
@@ -826,6 +898,7 @@ PCM.UI = (function () {
     else if (m.type === 'confirmEnd') inner = confirmEndModal();
     else if (m.type === 'summary') inner = summaryModal(G.pendingSummary);
     else if (m.type === 'jobs') inner = jobsModal();
+    else if (m.type === 'sponsor') inner = sponsorModal();
     else if (m.type === 'newgame') inner = `<header><h2>Start a new career?</h2><button class="x" data-act="closemodal" aria-label="Close">×</button></header><p>Your current career will be kept in a save slot. You can switch back to it from the start screen.</p><div class="row"><button class="btn" data-act="closemodal">Cancel</button><button class="btn danger" data-act="newgame">Yes, start over</button></div>`;
     if (!inner) return '';
     return `<div class="modal-bg" data-act="bgclose"><div class="modal ${cls}" role="dialog" aria-modal="true">${inner}</div></div>`;
@@ -838,7 +911,15 @@ PCM.UI = (function () {
     const o = Riders.ovr(r);
     const pot = mine ? r.pot : scoutPot(r);
     const attrs = DATA.ATTRS.map(a => `<div class="attr"><span class="small">${a.long}</span>${meter((r.a[a.k] - 40) * 2)}<b class="num">${Math.round(r.a[a.k])}</b></div>`).join('');
-    const ask = Game.askingSalary(G, r);
+    const ask = PCM.Mgmt ? PCM.Mgmt.currentAsk(G, r, Game.askingSalary) : Game.askingSalary(G, r);
+    const pref = PCM.Mgmt ? PCM.Mgmt.preferredYears(G, r) : 2;
+    const negotiation = (kind, yearsLabel, maxYears) => `<div class="row">
+        <div class="field"><label class="label" for="ng-sal">Salary (€/yr)</label><input type="number" id="ng-sal" value="${ask}" step="5000" min="0" style="width:130px"></div>
+        <div class="field"><label class="label" for="ng-yrs">${yearsLabel}</label><select id="ng-yrs">${Array.from({ length: maxYears }, (_, i) => i + 1).map(y => `<option value="${y}" ${y === pref ? 'selected' : ''}>${(kind === 'renew' ? G.year : (G.week > W ? G.year : G.year - 1)) + y}</option>`).join('')}</select></div>
+        <div class="field"><label class="label" for="ng-bonus">Signing bonus</label><input type="number" id="ng-bonus" value="0" step="10000" min="0" style="width:120px"></div>
+        <div class="field"><label class="label" for="ng-role">Promise a role</label><select id="ng-role"><option value="">No promise</option><option value="leader">Team leader</option><option value="free">Free role</option></select></div>
+        <button class="btn primary" data-act="negotiate" data-kind="${kind}" data-id="${r.id}" style="align-self:flex-end">Make offer</button></div>
+      <p class="small muted">He's asking ${U.money(ask)} a year and would like ${pref} year${pref > 1 ? 's' : ''}. A signing bonus or a promised role can close the gap. Too many low offers and he walks away.${r.talks && r.talks.year === G.year && r.talks.round ? ` Round ${r.talks.round} of 4.` : ''}</p>`;
     let actions = '';
     if (mine) {
       const canRenew = r.contractEnd <= G.year + 1;
@@ -847,9 +928,8 @@ PCM.UI = (function () {
           <div class="field"><label class="label" for="m-focus">Focus</label><select id="m-focus" data-change="focus" data-id="${r.id}">${Object.entries(DATA.TRAINING_FOCUS).map(([k, v]) => `<option value="${k}" ${r.focus === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
         </div></div>
         <div class="panel"><h4>Contract</h4><p class="small">${U.money(r.salary)} per year until the end of ${r.contractEnd}.</p>
-          ${canRenew ? `<div class="row"><div class="field"><label class="label" for="rn-sal">Salary (€/yr)</label><input type="number" id="rn-sal" value="${ask}" step="5000" min="0" style="width:130px"></div>
-            <div class="field"><label class="label" for="rn-yrs">Extend until</label><select id="rn-yrs">${[1, 2, 3, 4].map(y => `<option value="${y}" ${y === 2 ? 'selected' : ''}>${G.year + y}</option>`).join('')}</select></div>
-            <button class="btn primary" data-act="renew" data-id="${r.id}" style="align-self:flex-end">Offer extension</button></div><p class="small muted">He's asking about ${U.money(ask)} per year.</p>` : '<p class="small muted">You can discuss an extension in the final year of his contract.</p>'}
+          ${r.promisedRole ? `<p class="small">Promised role: <b>${r.promisedRole === 'leader' ? 'team leader' : 'free role'}</b></p>` : ''}
+          ${canRenew ? negotiation('renew', 'Extend until', 4) : '<p class="small muted">You can discuss an extension in the final year of his contract.</p>'}
           <div class="row">${m.confirmRelease ? `<span class="small">Release for ${U.money(Game.releaseCost(G, r))} settlement?</span><button class="btn danger sm" data-act="release" data-id="${r.id}">Confirm release</button><button class="btn sm" data-act="release-cancel">Cancel</button>` : `<button class="btn danger sm" data-act="release-ask">Release rider…</button>`}</div>
         </div>`;
     } else {
@@ -857,12 +937,10 @@ PCM.UI = (function () {
       const endBase = G.week > W ? G.year : G.year - 1;
       actions = `<div class="panel"><h4>${r.teamId ? 'Transfer offer' : 'Sign free agent'}</h4>
         ${r.teamId ? `<p class="small">${h(G.teams[r.teamId].name)} want <b>${U.money(fee)}</b> as a transfer fee. Contract runs until ${r.contractEnd}.</p>` : ''}
-        <div class="row"><div class="field"><label class="label" for="of-sal">Salary (€/yr)</label><input type="number" id="of-sal" value="${ask}" step="5000" min="0" style="width:130px"></div>
-          <div class="field"><label class="label" for="of-yrs">Contract until</label><select id="of-yrs">${[1, 2, 3].map(y => `<option value="${y}" ${y === 2 ? 'selected' : ''}>${endBase + y}</option>`).join('')}</select></div>
-          <button class="btn primary" data-act="offer" data-id="${r.id}" style="align-self:flex-end">Make offer</button></div>
-        <p class="small muted">He's asking about ${U.money(ask)} per year. You have ${U.money(me().cash)} in the bank.</p></div>`;
+        ${negotiation('sign', 'Contract until', 3)}
+        <p class="small muted">You have ${U.money(me().cash)} in the bank.</p></div>`;
     }
-    return `<header><div class="row" style="gap:16px"><div class="bigovr num">${o.toFixed(0)}</div><div><div class="label">${h(DATA.SPECIALTIES[Riders.specialty(r)].long)} · ${age(r)} years · ${flag(r.nat)} ${h(DATA.natName(r.nat))}</div><h2>${h(Riders.fullName(r))}</h2><div class="small">${tCell(r.teamId)} · Potential ${stars(pot)}${mine ? '' : ' <span class="muted">(scouted)</span>'}</div></div></div><button class="x" data-act="closemodal" aria-label="Close">×</button></header>
+    return `<header><div class="row" style="gap:16px"><div class="bigovr num">${o.toFixed(0)}</div><div><div class="label">${h(DATA.SPECIALTIES[Riders.specialty(r)].long)} · ${age(r)} years · ${flag(r.nat)} ${h(DATA.natName(r.nat))}</div><h2>${h(Riders.fullName(r))}</h2><div class="small">${tCell(r.teamId)} · Potential ${stars(pot)}${mine || (G.scouted && G.scouted[r.id]) ? (G.scouted && G.scouted[r.id] && !mine ? ' <span class="pill good">scouted</span>' : '') : ' <span class="muted">(estimate)</span>'}</div></div></div><button class="x" data-act="closemodal" aria-label="Close">×</button></header>
       ${m.msg ? `<div class="msg ${m.ok ? 'good' : 'bad'}">${h(m.msg)}</div>` : ''}
       <div class="attrs">${attrs}</div>
       <div class="stats small">
@@ -900,6 +978,15 @@ PCM.UI = (function () {
       </div>
       ${s.left.length ? `<p class="small"><b>Left the team:</b> ${h(s.left.join(', '))}</p>` : ''}${s.retired.length ? `<p class="small"><b>Retired:</b> ${h(s.retired.join(', '))}</p>` : ''}
       <div class="row"><button class="btn go" data-act="closesummary">${s.fired ? 'See job offers' : 'Start ' + (s.year + 1) + ' season ▸'}</button></div>`;
+  }
+  function sponsorModal() {
+    const offers = G.sponsorOffers || [];
+    return `<header><div><div class="label">New season</div><h2>Choose your sponsor deal</h2></div></header>
+      <p>Three sponsors want to back ${h(me().name)} in ${G.year}.</p>
+      <div class="grid g3">${offers.map((o, i) => `<div class="panel"><h3>${h(o.name)}</h3><p class="small">${h(o.text)}</p>
+        <div class="stat"><span class="label">Budget / year</span><span class="v num">${U.money(o.base)}</span></div>
+        ${o.perWin ? `<div class="small">+ ${U.money(o.perWin)} per win</div>` : ''}${o.perPoint ? `<div class="small">+ ${U.money(o.perPoint)} per UCI point</div>` : ''}
+        <button class="btn primary" data-act="sponsorpick" data-i="${i}">Sign</button></div>`).join('')}</div>`;
   }
   function jobsModal() {
     const offers = Game.jobOffers(G);
@@ -1033,6 +1120,33 @@ PCM.UI = (function () {
       case 'racetab': S.raceTab = el.dataset.t; render(); break;
       case 'raceresults': S.modal = { type: 'race', id }; S.raceTab = 'gc'; S.stageView = null; { const r = G.calendar.find(x => x.id === id); if (r.kind === 'oneday') S.raceTab = 'stage'; } render(); break;
       case 'standtab': S.standTab = el.dataset.t; render(); break;
+      case 'negotiate': {
+        const v = k => document.getElementById(k).value;
+        const terms = { salary: +v('ng-sal'), years: +v('ng-yrs'), bonus: +v('ng-bonus') || 0, role: v('ng-role') };
+        const blocked = el.dataset.kind === 'sign' ? Game.signCheck(G, +id, terms.bonus) : null;
+        if (blocked) { S.modal.msg = blocked; S.modal.ok = false; render(); break; }
+        const reply = PCM.Mgmt.negotiate(G, +id, terms, Game.askingSalary);
+        if (reply.status === 'accepted') {
+          const opts = { accepted: true, bonus: terms.bonus, role: terms.role };
+          const res = el.dataset.kind === 'renew' ? Game.renew(G, +id, terms.salary, terms.years, opts) : Game.offer(G, +id, terms.salary, terms.years, opts);
+          S.modal.msg = res.ok ? reply.msg + ' ' + res.msg : res.msg; S.modal.ok = res.ok;
+        } else { S.modal.msg = reply.msg; S.modal.ok = false; }
+        commit(); break;
+      }
+      case 'clubtab': S.clubTab = el.dataset.t; render(); break;
+      case 'hire': case 'fire': case 'upgradeequip': case 'upgradeacademy': case 'promote': case 'releaseacademy': case 'mission': {
+        let res;
+        if (act === 'hire') res = PCM.Mgmt.hire(G, id);
+        else if (act === 'fire') res = PCM.Mgmt.fire(G, id);
+        else if (act === 'upgradeequip') res = PCM.Mgmt.upgradeEquip(G, el.dataset.k);
+        else if (act === 'upgradeacademy') res = PCM.Mgmt.upgradeAcademy(G);
+        else if (act === 'promote') res = PCM.Mgmt.promote(G, +id, Game.signTo);
+        else if (act === 'releaseacademy') { PCM.Mgmt.releaseAcademy(G, +id); res = { ok: true, msg: 'Released from the academy.' }; }
+        else res = PCM.Mgmt.startMission(G, document.getElementById('ms-scout').value, document.getElementById('ms-nat').value);
+        if (res.cost || res.fee) Game.ledger(G, act === 'hire' ? 'Staff signing fee' : act === 'fire' ? 'Staff settlement' : act === 'upgradeacademy' ? 'Academy upgrade' : 'Equipment upgrade', -(res.cost || res.fee));
+        toast(res.msg); commit(); break;
+      }
+      case 'sponsorpick': PCM.Mgmt.chooseSponsor(G, +el.dataset.i); S.modal = null; toast('New sponsor deal signed.'); commit(); break;
       case 'renew': {
         const res = Game.renew(G, +id, +document.getElementById('rn-sal').value, +document.getElementById('rn-yrs').value);
         S.modal.msg = res.msg; S.modal.ok = res.ok; commit(); break;
@@ -1049,7 +1163,7 @@ PCM.UI = (function () {
         commit(); break;
       }
       case 'endseason': Game.endSeason(G); S.modal = { type: 'summary' }; S.sel = null; commit(true); break;
-      case 'closesummary': G.pendingSummary = null; S.modal = G.fired ? { type: 'jobs' } : null; S.view = 'dashboard'; commit(); break;
+      case 'closesummary': G.pendingSummary = null; S.modal = G.fired ? { type: 'jobs' } : G.sponsorOffers ? { type: 'sponsor' } : null; S.view = 'dashboard'; commit(); break;
       case 'takejob': Game.takeJob(G, id); S.modal = null; S.view = 'dashboard'; toast('Welcome to ' + G.teams[id].name); commit(); break;
       case 'copysave': {
         // clipboard must be written inside the click, so prepare the code ahead and copy on the second click if needed
@@ -1074,7 +1188,7 @@ PCM.UI = (function () {
   function closeModal() {
     if (!S.modal) return;
     if (S.modal.type === 'summary') { G.pendingSummary = null; S.modal = G.fired ? { type: 'jobs' } : null; commit(); return; }
-    if (S.modal.type === 'jobs') return; // must pick a team
+    if (S.modal.type === 'jobs' || S.modal.type === 'sponsor') return; // a choice is required
     S.modal = null;
     render();
   }

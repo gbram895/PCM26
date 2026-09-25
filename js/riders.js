@@ -111,7 +111,7 @@ PCM.Riders = (function () {
   // o: { formTarget, growthMult, focusAttrs, fatigueAdd, moraleAdd } from peaks and training camps
   function trainWeek(r, year, o = {}) {
     const load = DATA.TRAINING_LOAD[r.plan] || DATA.TRAINING_LOAD.normal;
-    const recover = (10 + (r.a.re - 60) / 4) * load.fatigue;
+    const recover = (10 + (r.a.re - 60) / 4) * load.fatigue * (o.recoverMult || 1);
     r.fatigue = U.clamp(r.fatigue - recover, 0, 100);
     if (r.plan === 'intense') r.fatigue = U.clamp(r.fatigue + 3, 0, 100);
     if (r.injury > 0) {
