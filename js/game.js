@@ -270,6 +270,14 @@ PCM.Game = (function () {
       race.tactics[id] = stage.type !== 'itt' && stage.type !== 'flat' && R.chance(0.25) ? 'agg' : R.chance(0.15) ? 'cons' : 'bal';
     }
   }
+  // live stages: the UI steps the simulation itself and calls finishLive at the end (null for time trials)
+  function liveStage(G, race, playerTactic) {
+    if (race.stages[race.cur].type === 'itt') return null;
+    aiTactics(G, race);
+    race.tactics[G.playerTeamId] = playerTactic || 'bal';
+    return PCM.StageSim.create(G, race);
+  }
+  function finishLive(G, sim) { return PCM.StageSim.finish(sim); }
   function simStage(G, race, playerTactic) {
     aiTactics(G, race);
     race.tactics[G.playerTeamId] = playerTactic || 'bal';
@@ -607,7 +615,7 @@ PCM.Game = (function () {
   function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 
   return {
-    newGame, realAvailable, teamDefs, isInvited, advance, processWeek, startRace, simStage, autoRace, currentRace, nextRace, endSeason, jobOffers, takeJob,
+    newGame, realAvailable, teamDefs, isInvited, liveStage, finishLive, advance, processWeek, startRace, simStage, autoRace, currentRace, nextRace, endSeason, jobOffers, takeJob,
     offer, renew, release, releaseCost, askingSalary, askingFee, payroll, player, teamRanking, riderRanking, teamStrength,
     evalObjective, news, inbox, ledger, serialize, deserialize, save, load, clearSave, inRunningRace,
     MAX_ROSTER, MIN_ROSTER,

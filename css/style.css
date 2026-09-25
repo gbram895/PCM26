@@ -49,6 +49,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--body); }
 h1, h2, h3, h4 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; margin: 0; text-wrap: balance; line-height: 1.1; }
@@ -250,3 +251,15 @@ details > summary { cursor: pointer; color: var(--ink-2); }
 .savebtn.save-saved { color: var(--good); }
 .savebtn.save-saving { color: var(--ink-3); }
 .savebtn.save-error { color: var(--bad); border-color: var(--bad); }
+.meter.energy { height: 10px; min-width: 90px; flex: 1; }
+.meter.energy.hi > i { background: var(--good); }
+.meter.energy.mid > i { background: var(--warn); }
+.meter.energy.lo > i { background: var(--bad); }
+.lv-rider { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; background: var(--surface-2); }
+.lv-rider.out { opacity: .5; }
+.lv-energy { flex-wrap: nowrap; }
+.lv-act { color: var(--accent); font-weight: 600; min-width: 90px; }
+.lgroup { border-left: 3px solid var(--line); padding: 4px 10px; }
+.lgroup.has-mine { border-color: var(--leader); background: var(--mine); }
+.mine-name { color: var(--accent); }
+.live .marker.m-mine circle, .marker.m-mine circle { stroke: var(--leader); stroke-width: 3; }

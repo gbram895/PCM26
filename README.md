@@ -40,7 +40,7 @@ This writes `js/data-real.js` (ignored by git). The **Real peloton** option then
 - **Choose one of 18 fictional teams**, from a superteam to an underdog wildcard. Each team has its own budget, squad depth and board expectations.
 - **Race a 25-event season**: spring Classics and cobbled Monuments, week-long stage races, and three 21-stage Grand Tours.
 - **Pick 7–8 riders per race and give them roles**: leader, sprinter, domestique or free role. Domestiques pace their leader on climbs, lead-out men help sprinters, and free-role riders go for breakaways.
-- **Play each stage**: set a team tactic (conservative, balanced, aggressive), then watch a live commentary of the stage on its elevation profile or skip straight to the result. Stage races have GC, points, mountains, youth and team classifications.
+- **Race each stage live**, kilometre by kilometre, like PCM: every rider has an energy bar that drains on climbs, cobbles, pulls and attacks. Give each rider an order at any moment (auto, follow, pull, help leader, save energy) or launch an attack, use team orders (chase, protect leader), and watch the groups, gaps and race radio. Pause, play at ½× to 10×, or skip to the finish. Stage races have GC, points, mountains, youth and team classifications.
 - **Manage form and fatigue**: set each rider's weekly training load and focus. Rotate riders so leaders arrive fresh for their goals.
 - **Develop riders**: young riders grow towards their potential; veterans decline and eventually retire.
 - **Run the business**: sponsor income, salaries and prize money. Sign free agents or buy riders from rival teams, renew contracts, release riders.
@@ -54,10 +54,11 @@ This writes `js/data-real.js` (ignored by git). The **Real peloton** option then
 | `js/core.js` | Seeded RNG and formatting helpers |
 | `js/data.js` | Nations and name pools, teams, calendar, points tables |
 | `js/riders.js` | Rider generation, ratings, salaries, training and aging |
-| `js/race.js` | Course generation and the stage simulation engine |
+| `js/race.js` | Course generation, time trials and stage bookkeeping (GC, points, mountains) |
+| `js/stagesim.js` | Kilometre-by-kilometre road-stage engine: groups, energy, attacks, chases, rider orders |
 | `js/game.js` | World generation, weekly loop, finances, transfers, board, season rollover, save/load |
 | `js/ui.js` | All screens and event handling |
-| `js/live.js` | Live stage playback |
+| `js/live.js` | Live stage screen: speed, pause, orders, energy bars, groups and race radio |
 | `js/saves.js` | Save slots (Claude account or browser), save files and codes |
 | `test/sim.test.js` | Headless test that plays three full seasons |
 | `tools/build-real-db.js` | Builds the optional real-peloton roster from Wikipedia |

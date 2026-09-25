@@ -55,6 +55,12 @@ PCM.UI = (function () {
   }
   function toast(msg) {
     S.toast = msg;
+    // show it straight away, without waiting for the next full render
+    if (typeof document !== 'undefined' && root) {
+      let t = document.querySelector('.toast');
+      if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+      t.textContent = msg;
+    }
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { S.toast = ''; const t = document.querySelector('.toast'); if (t) t.remove(); }, 3200);
   }
@@ -208,7 +214,7 @@ PCM.UI = (function () {
 
   function render() {
     if (!root) return;
-    if (S.live && S.view !== 'race') { PCM.Live.stop(); S.live = null; }
+    if (S.live && (!G || !G.calendar.some(r => r.id === S.live.raceId && r.status !== 'upcoming'))) { PCM.Live.stop(); S.live = null; }
     if (!G && S.booting) { root.innerHTML = `<div class="intro"><div class="label">PCM26</div><h2>Loading your career…</h2><p class="muted small">Picking up where you left off.</p></div>`; return; }
     if (!G) { root.innerHTML = newGameView() + toastHtml(); return; }
     const scrollY = window.scrollY;
@@ -216,9 +222,10 @@ PCM.UI = (function () {
     if (liveRunning) PCM.Live.stop();
     root.innerHTML = `<div class="app">${topbar()}${nav()}<main class="main" id="view">${viewHtml()}</main></div>${modalHtml()}${toastHtml()}`;
     window.scrollTo(0, scrollY);
-    if (S.live) {
+    if (S.live && S.view === 'race' && document.getElementById('live')) {
       const race = G.calendar.find(r => r.id === S.live.raceId);
-      PCM.Live.start(document.getElementById('live'), { G, race, stage: race.stages[S.live.sr.n - 1], sr: S.live.sr, onDone: () => { S.live.done = true; } });
+      PCM.Live.start(document.getElementById('live'), { G, race, stage: S.live.sim.stage, sim: S.live.sim, onDone: liveDone });
+      if (S.live.sr) PCM.Live.addFinish(S.live.sr.results);
     }
   }
   function toastHtml() { return S.toast ? `<div class="toast" role="status">${h(S.toast)}</div>` : ''; }
@@ -461,9 +468,9 @@ PCM.UI = (function () {
         </div>`}
       </div>`;
     }
-    const live = S.live ? `<div class="panel" id="live">${liveShell(race, race.stages[S.live.sr.n - 1])}</div>` : '';
+    const live = S.live ? `<div class="panel live" id="live">${liveShell(race, S.live.sim.stage)}</div>` : '';
     const showResults = !S.live && (race.stageResults.length > 0);
-    const myStatus = done ? '' : myRidersPanel(race);
+    const myStatus = done || S.live ? "" : myRidersPanel(race);
     return `<div class="pagehead"><div><div class="label">${clsPill(race.cls)} · ${oneday ? 'One-day race' : 'Stage race'}</div><h1>${flag(race.country)} ${h(race.name)}</h1></div>${raceStats(race)}</div>
       ${head}${live}${showResults ? resultsPanel(race) : ''}${myStatus}
       ${!oneday ? `<div class="panel"><h3>Route</h3>${stageTable(race)}</div>` : ''}`;
@@ -550,14 +557,30 @@ PCM.UI = (function () {
 
   // ---------- live stage ----------
   function liveShell(race, stage) {
-    return `<header><h3>Live · ${race.kind === 'oneday' ? h(race.name) : 'Stage ' + stage.n}</h3>
-      <div class="row"><span class="label">Speed</span><button class="btn sm" data-act="livespeed" data-s="1">1×</button><button class="btn sm" data-act="livespeed" data-s="3">3×</button><button class="btn sm" data-act="livespeed" data-s="8">8×</button><button class="btn sm" data-act="liveskip">Skip to finish</button></div></header>
+    return `<header><h3>Live · ${race.kind === 'oneday' ? h(race.name) : 'Stage ' + stage.n} · ${stage.km} km</h3>
+      <div class="row"><button class="btn sm" data-act="livepause">⏸ Pause</button><span class="label">Speed</span>${[0.5, 1, 3, 10].map(v => `<button class="btn sm" data-act="livespeed" data-s="${v}">${v === 0.5 ? '½' : v}×</button>`).join('')}<button class="btn sm" data-act="liveskip">Skip to finish</button></div></header>
       <div class="profile course">${profileSVG(stage, { extra: '<g id="markers"></g>' })}</div>
       <div class="readout"><div class="stat"><span class="label">To go</span><span class="v num" id="lv-togo">${stage.km} km</span></div>
-        <div class="stat"><span class="label">Breakaway</span><span class="v num" id="lv-gap">–</span></div>
+        <div class="stat" style="flex:1;min-width:200px"><span class="label">Road</span><span class="v" id="lv-where" style="font-size:18px">–</span></div>
         <div class="stat"><span class="label">Race time</span><span class="v num" id="lv-time">0'00"</span></div></div>
-      <div class="feed" id="lv-feed" aria-live="polite"></div>
-      <div class="row" id="lv-done" hidden><button class="btn go" data-act="liveclose">Show results ▸</button></div>`;
+      <div class="row" id="lv-done" hidden><button class="btn go" data-act="liveclose">Show results ▸</button></div>
+      <div class="grid g2">
+        <div class="stack"><h4>Our riders</h4>
+          <div class="row small"><span class="label">Team orders</span>${[['auto', 'All auto'], ['follow', 'All follow'], ['chase', 'Chase'], ['protect', 'Protect leader']].map(([k, l]) => `<button class="btn sm" data-act="liveteam" data-o="${k}">${l}</button>`).join('')}</div>
+          <div id="lv-mine" class="stack"></div></div>
+        <div class="stack"><h4>On the road</h4><div id="lv-groups" class="stack"></div></div>
+      </div>
+      <h4>Race radio</h4>
+      <div class="feed" id="lv-feed" aria-live="polite"></div>`;
+  }
+  function liveDone() {
+    if (!S.live || S.live.sr) return;
+    const race = G.calendar.find(r => r.id === S.live.raceId);
+    S.live.sr = Game.finishLive(G, S.live.sim);
+    PCM.Saves.autosave(G, true);
+    PCM.Live.addFinish(S.live.sr.results);
+    const w = G.riders[S.live.sr.results[0][0]];
+    toast(`${Riders.fullName(w)} wins${race.kind === 'oneday' ? ' ' + race.name : ' stage ' + S.live.sr.n}!`);
   }
   function names(rids) { return rids.map(id => { const r = G.riders[id]; return r ? `<b>${h(Riders.shortName(r))}</b>` : '?'; }); }
   function evText(ev, race, stage) {
@@ -569,7 +592,9 @@ PCM.UI = (function () {
       case 'crash': return `Crash! ${n[0]} goes down but gets back on the bike.`;
       case 'abandon': return `${n[0]} abandons after ${ev.why === 'crash' ? 'a heavy crash' : 'falling ill'}.`;
       case 'catch': return `The breakaway is caught with ${stage.km - ev.km} km to go.`;
-      case 'attack': return stage.type === 'cobbles' ? `${n[0]} surges on the cobbles${n[1] ? ', ' + n[1] + ' gives chase' : ''}!` : `${n[0]} attacks${n[1] ? '! ' + n[1] + ' tries to follow.' : '!'}`;
+      case 'dropped': return `${n.join(', ')} ${n.length > 1 ? 'are' : 'is'} dropped${stage.climbs.length ? '' : ' from the group'}.`;
+      case 'empty': return `${n[0]} is running on empty!`;
+      case 'attack': return ev.terr === 'cobbles' ? `${n[0]} surges on the cobbles${n[1] ? ' with ' + n.slice(1).join(', ') : ''}!` : `${n.join(', ')} ${n.length > 1 ? 'go clear' : 'attacks and gets a gap'}!`;
       case 'sprint': return 'The sprint trains are winding up for the finish.';
       case 'finish': return `${n[0]} wins${race.kind === 'oneday' ? ' ' + h(race.name) : ''}! ${n[1] ? n[1] + ' is second' : ''}${n[2] ? ', ' + n[2] + ' third.' : '.'}`;
     }
@@ -860,10 +885,14 @@ PCM.UI = (function () {
   function runStage(watch) {
     const race = Game.currentRace(G);
     if (!race || race.status !== 'running') return;
-    const sr = Game.simStage(G, race, S.tactic);
     S.stageView = null;
+    if (watch) {
+      const sim = Game.liveStage(G, race, S.tactic);
+      if (sim) { S.live = { raceId: race.id, sim, sr: null }; render(); return; }
+      toast('Time trials are ridden one rider at a time, so this one runs straight to the result.');
+    }
+    Game.simStage(G, race, S.tactic);
     if (race.kind === 'stage' || race.status === 'done') S.raceTab = S.raceTab || 'stage';
-    if (watch) S.live = { raceId: race.id, sr, done: false };
     commit(race.status === 'done');
   }
 
@@ -886,7 +915,7 @@ PCM.UI = (function () {
       case 'delslot-ask': S.confirmDel = el.dataset.slot; render(); break;
       case 'delslot': S.confirmDel = null; PCM.Saves.remove(el.dataset.slot).then(() => toast('Save deleted'), err => toast(err.message || 'Delete failed')); break;
       case 'savefile': PCM.Saves.saveFile(G).then(() => toast('Save file created'), err => { if (!err || err.code !== 'declined') toast('Could not create the file. Use Copy save code instead.'); }); break;
-      case 'nav': if (S.live) { PCM.Live.stop(); S.live = null; } S.view = el.dataset.view; S.modal = null; S.stageView = null; render(); window.scrollTo(0, 0); break;
+      case 'nav': if (S.live) PCM.Live.stop(); S.view = el.dataset.view; S.modal = null; S.stageView = null; render(); window.scrollTo(0, 0); break;
       case 'continue': onContinue(); break;
       case 'tonextrace': skipToRace(); break;
       case 'rider': e.preventDefault(); S.modal = { type: 'rider', id: +id }; render(); break;
@@ -918,7 +947,10 @@ PCM.UI = (function () {
       }
       case 'livespeed': PCM.Live.speed(+el.dataset.s); break;
       case 'liveskip': PCM.Live.skip(); break;
-      case 'liveclose': PCM.Live.stop(); S.live = null; S.raceTab = 'stage'; render(); break;
+      case 'liveclose': PCM.Live.stop(); S.live = null; S.raceTab = 'stage'; commit(); break;
+      case 'livepause': PCM.Live.togglePause(); break;
+      case 'liveattack': if (S.live && PCM.StageSim.attack(S.live.sim, +id)) { PCM.Live.refresh(); toast(Riders.fullName(G.riders[+id]) + ' attacks!'); } break;
+      case 'liveteam': if (S.live) { PCM.StageSim.teamOrder(S.live.sim, G.playerTeamId, el.dataset.o); PCM.Live.start(document.getElementById('live'), { G, race: G.calendar.find(r => r.id === S.live.raceId), stage: S.live.sim.stage, sim: S.live.sim, onDone: liveDone }); } break;
       case 'racetab': S.raceTab = el.dataset.t; render(); break;
       case 'raceresults': S.modal = { type: 'race', id }; S.raceTab = 'gc'; S.stageView = null; { const r = G.calendar.find(x => x.id === id); if (r.kind === 'oneday') S.raceTab = 'stage'; } render(); break;
       case 'standtab': S.standTab = el.dataset.t; render(); break;
@@ -991,6 +1023,7 @@ PCM.UI = (function () {
         render(); break;
       }
       case 'role': S.sel.picks[id] = el.value; render(); break;
+      case 'liveorder': if (S.live) PCM.StageSim.setOrder(S.live.sim, id, el.value); break;
       case 'mkt': S.mkt[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; render(); break;
       case 'racestage': case 'modalstage': S.stageView = +el.value; S.raceTab = 'stage'; render(); break;
     }

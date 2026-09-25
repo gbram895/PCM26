@@ -283,7 +283,16 @@ PCM.Race = (function () {
     if (team) team.season.wins++;
   }
 
+  // Time trials use the score-based engine; every other stage is raced kilometre by kilometre.
   function runStage(G, race) {
+    const stage = race.stages[race.cur];
+    if (stage.type === 'itt' || !PCM.StageSim) return legacyStage(G, race);
+    const sim = PCM.StageSim.create(G, race);
+    PCM.StageSim.runToEnd(sim);
+    return PCM.StageSim.finish(sim);
+  }
+
+  function legacyStage(G, race) {
     const stage = race.stages[race.cur];
     const day = race.cur;
     const P = PARAMS[stage.type];
@@ -395,6 +404,35 @@ PCM.Race = (function () {
     const g0 = results.length ? results[0].gap : 0;
     for (const x of results) x.gap -= g0;
 
+    // mountain points: the break takes the climbs it was ahead on, otherwise the best climbers
+    const komOrders = [];
+    const racingIds = racing.map(x => x.rid);
+    stage.climbs.forEach((c, i) => {
+      let order;
+      if (brk && (brk.success || c.km < brk.catchKm) && c.km > brk.formKm) {
+        order = brk.rids.filter(id => !race.st[id].out).map(id => ({ id, v: G.riders[id].a.mo + R.normal(0, 3) }))
+          .sort((a, b) => b.v - a.v).map(o => o.id);
+      } else {
+        order = racingIds.map(id => ({ id, v: G.riders[id].a.mo * 0.9 + R.normal(0, 5) })).sort((a, b) => b.v - a.v).slice(0, 8).map(o => o.id);
+      }
+      komOrders.push({ i, rids: order });
+      if (order.length) events.push({ km: c.km, kind: 'kom', rids: [order[0]], climb: i });
+    });
+    return applyStageResult(G, race, stage, {
+      results, T0, komOrders, events, abandons,
+      brk: brk ? { rids: brk.rids, success: brk.success, formKm: brk.formKm, catchKm: brk.catchKm, gap: brk.gap || 0 } : null,
+      racing: racing.map(x => ({ rid: x.rid, role: x.role, tact: x.tact, inBreak: !!(brk && brk.rids.includes(x.rid)) })),
+    });
+  }
+
+  // Bookkeeping shared by both stage engines: GC times, classifications, fatigue, UCI points, wins.
+  function applyStageResult(G, race, stage, d) {
+    const oneday = race.kind === 'oneday';
+    const P = PARAMS[stage.type];
+    const results = d.results;
+    const T0 = d.T0;
+    for (const rid of d.abandons) if (race.st[rid]) race.st[rid].out = true;
+
     // GC times + bonuses
     const bonus = (!oneday && stage.type !== 'itt') ? [10, 6, 4] : [];
     results.forEach((x, i) => {
@@ -407,39 +445,27 @@ PCM.Race = (function () {
     const tbl = DATA.STAGE_POINTS[stage.type];
     results.slice(0, tbl.length).forEach((x, i) => { race.st[x.rid].pts += tbl[i]; });
 
-    // mountains classification
+    // mountains classification (a summit finish is scored from the stage result)
     const komLog = [];
-    const racingIds = racing.map(x => x.rid);
     stage.climbs.forEach((c, i) => {
       let order;
-      const last = i === stage.climbs.length - 1;
-      if (last && stage.summit && c.km >= stage.km - 0.5) order = results.map(x => x.rid);
-      else if (brk && (brk.success || c.km < brk.catchKm) && c.km > brk.formKm) {
-        order = brk.rids.filter(id => !race.st[id].out).map(id => ({ id, v: G.riders[id].a.mo + R.normal(0, 3) }))
-          .sort((a, b) => b.v - a.v).map(o => o.id);
-      } else {
-        order = racingIds.map(id => ({ id, v: G.riders[id].a.mo * 0.9 + R.normal(0, 5) })).sort((a, b) => b.v - a.v).slice(0, 8).map(o => o.id);
-      }
+      if (i === stage.climbs.length - 1 && stage.summit && c.km >= stage.km - 0.5) order = results.map(x => x.rid);
+      else order = ((d.komOrders || []).find(o => o.i === i) || { rids: [] }).rids.filter(id => race.st[id] && !race.st[id].out);
       const pts = DATA.KOM_POINTS[c.cat] || [];
       pts.forEach((p, j) => { if (order[j] !== undefined) race.st[order[j]].kom += p; });
       komLog.push({ i, rids: order.slice(0, 3) });
-      if (order.length) events.push({ km: c.km, kind: 'kom', rids: [order[0]], climb: i });
     });
-
-    // decisive attack narrative
-    if (results.length > 1 && (stage.type === 'mountain' || stage.type === 'hilly' || stage.type === 'cobbles')) {
-      const lc = stage.climbs[stage.climbs.length - 1];
-      const km = lc ? Math.max(1, lc.km - lc.len * R.range(0.3, 0.8)) : stage.km - R.int(5, 20);
-      const favs = results.filter(x => !(brk && brk.success && brk.rids.includes(x.rid))).slice(0, 2).map(x => x.rid);
-      if (favs.length) events.push({ km: Math.round(Math.min(km, stage.km - 1)), kind: 'attack', rids: favs });
-    }
-    events.sort((a, b) => a.km - b.km);
+    const events = (d.events || []).slice().sort((a, b) => a.km - b.km);
 
     // fatigue, race days, morale
-    for (const x of racing) {
+    for (const x of d.racing) {
       const r = G.riders[x.rid];
-      let f = P.fat * (1.25 - r.a.re / 100) * (x.role === 'dom' ? 1.15 : 1) * (x.tact === 'agg' ? 1.3 : x.tact === 'cons' ? 0.8 : 1);
-      if (brk && brk.rids.includes(x.rid)) f += 2;
+      let f;
+      if (d.energyUsed) f = P.fat * (1.25 - r.a.re / 100) * 0.5 + (d.energyUsed.get(x.rid) || 0) * 0.05;
+      else {
+        f = P.fat * (1.25 - r.a.re / 100) * (x.role === 'dom' ? 1.15 : 1) * (x.tact === 'agg' ? 1.3 : x.tact === 'cons' ? 0.8 : 1);
+        if (x.inBreak) f += 2;
+      }
       r.fatigue = U.clamp(r.fatigue + f, 0, 100);
       if (!oneday) r.fatigue = U.clamp(r.fatigue - (1.5 + (r.a.re - 50) / 20), 0, 100);
       r.season.days++;
@@ -457,8 +483,8 @@ PCM.Race = (function () {
     logTeamResults(G, race, results, oneday ? 'oneday' : 'stage');
 
     const sr = {
-      n: stage.n, type: stage.type, T0, results: results.map(x => [x.rid, x.gap]), komLog, events, abandons,
-      brk: brk ? { rids: brk.rids, success: brk.success, formKm: brk.formKm, catchKm: brk.catchKm, gap: brk.gap || 0 } : null,
+      n: stage.n, type: stage.type, T0, results: results.map(x => [x.rid, x.gap]), komLog, events, abandons: d.abandons,
+      brk: d.brk,
       gcLeader: oneday ? null : gcOrder(race)[0]?.rid,
     };
     race.stageResults.push(sr);
@@ -548,6 +574,6 @@ PCM.Race = (function () {
     }
   }
 
-  return { buildStage, instantiate, selectRoster, start, runStage, standings, gcOrder, raceKey, sprintKey, rosterSize,
+  return { buildStage, instantiate, selectRoster, start, runStage, applyStageResult, standings, gcOrder, raceKey, sprintKey, rosterSize,
     raceAbility, finishAbility, PARAMS, youthAge };
 })();

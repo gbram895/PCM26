@@ -50,7 +50,7 @@ assert.ok(B.estimateLevel('X', 28, 20) > B.estimateLevel('X', 28, 0));
 console.log('parsers OK');
 
 // ---- game on a real-style database (placeholder names) ----
-for (const f of ['core', 'data', 'riders', 'race', 'game']) {
+for (const f of ['core', 'data', 'riders', 'race', 'stagesim', 'game']) {
   vm.runInThisContext(fs.readFileSync(path.join(__dirname, '..', 'js', f + '.js'), 'utf8'), { filename: f + '.js' });
 }
 const { Game, Riders, DATA } = globalThis.PCM;
